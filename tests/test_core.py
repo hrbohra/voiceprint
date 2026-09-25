@@ -283,3 +283,10 @@ def test_less_direction_rule_strength_is_consistency_of_avoidance():
                            "n_target": 500, "n_reference": 500, "distinctiveness": 1}]).set_index("feature")
     r = rules.statistical_rules(table)[0]
     assert r.statement == "Skip greetings" and r.strength == "usually"
+
+
+def test_fisher_decision_scales_with_sample():
+    # 8% vs 0% is not significant at n=24 but is at n=150; a 15-point gap at n=10 is not
+    assert rules.fisher_p(2, 24, 0, 24) > 0.05
+    assert rules.fisher_p(12, 150, 0, 150) < 0.05
+    assert rules.fisher_p(3, 10, 1, 10) > 0.05

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import random
+import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -224,7 +225,14 @@ def run(corpus: Corpus, cfg: Config, *, targets: list[str] | None = None, refere
     # ── exemplars, SFT, DPO ──
     stage("exemplars")
     exemplars = []
-    quotable = [t for t in t_train if 3 <= len(t.text.split()) <= 90 and rare.is_quotable(t.text)
+    # Exemplars must stand alone: at least 6 words, not a thread continuation ("… 2/2", starting in
+    # lowercase mid-sentence), so the few-shot block shows whole replies rather than fragments.
+    def standalone(text: str) -> bool:
+        s = text.strip()
+        return (6 <= len(s.split()) <= 90 and not re.search(r"\(?\b[2-9]/\d\b\)?", s)
+                and not (s[:1].islower() and not s[:1].isdigit()))
+
+    quotable = [t for t in t_train if standalone(t.text) and rare.is_quotable(t.text)
                 and (not prev_map.get(t.key) or rare.is_quotable(prev_map[t.key].text))]
     ranked = quotable
     if sc and quotable:

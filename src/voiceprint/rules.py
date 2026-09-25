@@ -297,17 +297,30 @@ def _band(rate: float) -> Strength:
     return next(s for s in ("always", "usually", "often", "sometimes") if rate >= STRENGTH_MIN[s] - 0.1) if rate >= 0.1 else "rarely"
 
 
-def _decide(rule: Rule, t_rate: float, r_rate: float | None, min_margin: float) -> bool:
+def fisher_p(t_hits: int, t_n: int, r_hits: int, r_n: int, greater: bool = True) -> float:
+    """One-sided Fisher exact p-value that the target follows the rule more (or less) than the reference."""
+    from scipy.stats import fisher_exact
+
+    table = [[t_hits, t_n - t_hits], [r_hits, r_n - r_hits]]
+    return float(fisher_exact(table, alternative="greater" if greater else "less")[1])
+
+
+def _decide(rule: Rule, t_rate: float, r_rate: float | None, min_margin: float, p: float | None = None,
+            alpha: float = 0.05) -> bool:
     """Distinctiveness decides whether a rule is kept; the held-out rate decides how strong it is.
 
-    A rule the target follows clearly more than the reference is a real trait even if the inducer
-    overstated it ("usually" when the held-out rate is 58%). Its strength is recalibrated to the
-    observed band instead of discarding it (planted eval: the emoji-ending rule, 58% vs 0%, was lost
-    to a 2-point shortfall before this). A rule that is not distinctive is dropped however true."""
+    Distinctive means: target and reference differ in the rule's direction by at least `min_margin`
+    (a practical floor) AND a one-sided Fisher exact test gives p < alpha (decision D-48). A fixed
+    15-point margin alone rejected real but infrequent habits (8% vs 0% at n=24) and would accept a
+    15-point fluke at small n; the exact test scales with the sample.
+
+    A distinctive rule whose claimed strength overstates the held-out rate is recalibrated to the
+    observed band instead of discarded (D-39). A rule that is not distinctive is dropped however true."""
+    significant = p is None or p < alpha
     if rule.strength in ("rarely", "never"):
-        return t_rate <= STRENGTH_MAX[rule.strength] + 0.1 and (r_rate is None or r_rate - t_rate >= min_margin)
-    distinctive = r_rate is None or t_rate - r_rate >= min_margin
-    if not distinctive or t_rate < 0.1:
+        return t_rate <= STRENGTH_MAX[rule.strength] + 0.1 and (r_rate is None or (r_rate - t_rate >= min_margin and significant))
+    distinctive = r_rate is None or (t_rate - r_rate >= min_margin and significant)
+    if not distinctive or t_rate < 0.04:
         return False
     if t_rate < STRENGTH_MIN[rule.strength] - 0.1:
         rule.verification["strength_claimed"] = rule.strength
@@ -315,8 +328,8 @@ def _decide(rule: Rule, t_rate: float, r_rate: float | None, min_margin: float) 
     return True
 
 
-def verify(llm, rules: list[Rule], target_heldout: list[str], reference_heldout: list[str], n: int = 24, seed: int = 7,
-           min_margin: float = 0.15, rules_per_call: int = 8) -> list[Rule]:
+def verify(llm, rules: list[Rule], target_heldout: list[str], reference_heldout: list[str], n: int = 48, seed: int = 7,
+           min_margin: float = 0.05, rules_per_call: int = 8, alpha: float = 0.05) -> list[Rule]:
     """Blind held-out verification. One shared sample of n target and n reference turns, shuffled so
     the judge cannot tell which is which; up to `rules_per_call` rules judged per call against it.
 
@@ -349,7 +362,10 @@ def verify(llm, rules: list[Rule], target_heldout: list[str], reference_heldout:
             rc = [f for f, (_, g) in zip(flags, items) if g == "r"]
             t_rate = sum(tc) / max(len(tc), 1)
             r_rate = sum(rc) / max(len(rc), 1) if rc else None
+            negative = rule.strength in ("rarely", "never")
+            p = fisher_p(sum(tc), len(tc), sum(rc), len(rc), greater=not negative) if rc else None
             rule.verification.update({"target_compliance": round(t_rate, 3), "reference_compliance": None if r_rate is None else round(r_rate, 3),
-                                      "n_target": len(tc), "n_reference": len(rc), "judge": getattr(llm, "label", "")})
-            rule.kept = bool(_decide(rule, t_rate, r_rate, min_margin))
+                                      "n_target": len(tc), "n_reference": len(rc), "fisher_p": None if p is None else round(p, 4),
+                                      "judge": getattr(llm, "label", "")})
+            rule.kept = bool(_decide(rule, t_rate, r_rate, min_margin, p, alpha))
     return rules
