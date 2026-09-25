@@ -239,10 +239,13 @@ def run(corpus: Corpus, cfg: Config, *, targets: list[str] | None = None, refere
         s = scorer.score_surface(sc, [t.text for t in quotable])
         ranked = [quotable[i] for i in np.argsort(-s)]
     per_sit: dict[int, int] = {}
+    seen: set[str] = set()
     for t in ranked:
         sid = assign.get(t.key, -1)
-        if per_sit.get(sid, 0) >= cfg.exemplars_per_situation:
+        norm = re.sub(r"\W+", " ", t.text.lower()).strip()
+        if per_sit.get(sid, 0) >= cfg.exemplars_per_situation or norm in seen:  # templated replies repeat verbatim
             continue
+        seen.add(norm)
         per_sit[sid] = per_sit.get(sid, 0) + 1
         prev = prev_map.get(t.key)
         exemplars.append({"situation": next((x.name or x.id for x in sits if x.id == sid), None), "context": prev.text if prev else None, "text": t.text})
