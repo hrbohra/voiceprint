@@ -1,0 +1,8 @@
+*.egg-info/
+.venv/
+.voiceprint/
+__pycache__/
+data/
+results/*/run/dpo.jsonl
+results/*/run/sft.jsonl
+scratch/
