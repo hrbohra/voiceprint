@@ -67,4 +67,27 @@ Data: twcs from the Hugging Face mirror `SunidhiSriram/twcs` @ `b03fa0a7` of Tho
 *Customer Support on Twitter* (CC BY-NC-SA 4.0), first 700k rows, English turns only. Books: 23
 Project Gutenberg texts by Austen, Dickens, Twain, Doyle, Wilde, C. Brontë, Hardy and Wells.
 
-<!-- sections 3–5 are filled in as the remaining evals complete -->
+## 3. How much data does a voice need?
+
+`python scripts/public_evals.py curve` (AmazonHelp against 9 other brands, 415 held-out AmazonHelp turns)
+
+Features are computed once. The contrast, the statistical rules and the scorer are then re-fitted
+on growing random subsets of the target's training turns, and compared with the full-data result.
+
+| target turns | rank agreement of effect sizes with full data (Spearman ρ) | same rule set as full data (Jaccard) | scorer AUC on held-out turns |
+|---|---|---|---|
+| 25 | 0.92 | 0.23 | 0.86 |
+| 50 | 0.94 | 0.36 | 0.88 |
+| 100 | 0.95 | 0.64 | 0.87 |
+| 200 | 0.96 | 0.70 | 0.89 |
+| 400 | 0.98 | **1.00** | 0.89 |
+| 800 | 0.99 | 1.00 | 0.90 |
+| 1,665 | 1.00 | 1.00 | 0.90 |
+
+The measured profile is stable from 25 messages (ρ = 0.92). The rule set needs more: it matches
+the full-data rules exactly from 400 messages on. Below that, it is a mix of the true rules and
+chance-level ones that the held-out check is there to catch. For Kiki's roughly 10,000
+conversations this sits well inside the stable region: small corpora work, and volume buys
+certainty about the rules.
+
+<!-- sections 4–5 are filled in as the remaining evals complete -->
