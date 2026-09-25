@@ -127,6 +127,9 @@ flowchart LR
 | D-45 | Statistical-rule strength is the consistency of the statement: the share of turns showing a "more" feature, the share **without** a "less" feature, and Cliff's δ for continuous features. | Reading the generated pack exposed "Rarely: skip greetings" (the opposite of the finding) and "Rarely: keep the tone sober" (presence is meaningless for a continuous score). |
 | D-46 | The memorisation check first removes cleared exemplars embedded in a larger text (the full prompt pack), then scans. Leak spans are listed in the manifest. | The one reported "leak" was an approved exemplar inside `full.txt`. The check was right to look, and wrong to match only whole outputs. |
 | D-47 | Tweets from a CC BY-NC-SA corpus are not committed: `full.txt` packs and exemplar files for public-corpus runs are git-ignored. | Keeps licensed text out of an MIT repository; rules, statistics and the scorer are ours. |
+| D-48 | Verification keeps a rule when target and reference differ in its direction by at least 5 points **and** a one-sided Fisher exact test gives p < 0.05. Default judged sample: 48 per side. Every rule records its p-value. | A fixed 15-point margin rejected real but infrequent habits and would have accepted a 15-point fluke at small n. The exact test scales with the sample and states the uncertainty. Re-run: planted 6/6 and null 0 unchanged; AmazonHelp keeps the same 6 rules, now with p-values. |
+| D-49 | Attribution excludes pooled pseudo-speakers (`customer`, `unknown`). | The first tweet attribution run compared 9 brands **plus all customers pooled**. Telling a brand from "everyone else" is not authorship attribution, and it inflated the published numbers. Found while reading the ablation output; both tweet runs are being redone. |
+| D-50 | Exemplars must stand alone (6+ words, no thread continuation like "2/2", not starting mid-sentence) and are deduplicated after normalisation. | Fragments ("emails sent by us here: <URL> 2/2") and verbatim duplicates of templated replies were being shown as few-shot examples. With clean exemplars, fidelity one-way entailment rose from 50% to 70%. |
 
 ## 4. Files
 
@@ -255,3 +258,15 @@ two short clauses" (100% vs 100%, not distinctive).
   <URL> 2/2"). Next: a minimum length, and skip thread continuations.
 - A session restart and a user-requested pause cost nothing, because checkpoints (D-40) resumed
   15/15 blocks.
+
+### 2026-09-26: final verification, integrity fixes
+
+- Re-ran planted (LLM) and the AmazonHelp extraction under D-48. The results are unchanged in
+  substance, and every kept rule now has a p-value.
+- Fidelity with clean exemplars (D-50): scorer 0.04 → 0.77 (real 0.73), style similarity 0.82 →
+  0.96 (real 0.92), content one-way 70%, both ways 30%.
+- **Integrity catch (D-49):** the tweet attribution included the pooled `customer` speaker. The
+  published tweet row was withdrawn in RESULTS.md until re-run.
+- Process note: queues launched with `Start-Process`, and even via WMI, did not survive session
+  restarts on this machine. Runs are now tracked background tasks, and per-block checkpoints
+  (D-40) make every restart cheap.
