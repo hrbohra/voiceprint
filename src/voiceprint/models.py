@@ -65,8 +65,12 @@ def configure(use_gpu: bool = True) -> None:
             pass
         if os.name == "nt":  # IDLE_PRIORITY_CLASS: every interactive app is scheduled first
             import ctypes
+            from ctypes import wintypes
 
-            ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(), 0x40)
+            k32 = ctypes.windll.kernel32
+            k32.GetCurrentProcess.restype = wintypes.HANDLE  # untyped, the 64-bit pseudo-handle is truncated and the call fails silently
+            k32.SetPriorityClass.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+            k32.SetPriorityClass(k32.GetCurrentProcess(), 0x40)
         else:
             os.nice(19)
 
