@@ -40,4 +40,31 @@ LLM rules after blind held-out verification (target vs reference compliance):
 On the null corpus the inducer proposed "use full forms", "no emoji", "skip greetings" and two
 more. All were true of the target and equally true of the reference, and all were rejected.
 
-<!-- sections 2–5 are filled in as the public-corpus evals complete -->
+## 2. Authorship attribution on held-out text
+
+`python scripts/public_evals.py books` · `python scripts/public_evals.py twcs`
+
+If the features capture voice, they should tell writers apart on text never used for fitting.
+Held-out material is split by document: whole conversations for tweets, and 25-paragraph blocks
+for books. Three classifiers run on the same split: the **surface** features only (what the
+TypeScript scorer sees), the **full** feature set, and the **style** embedding alone
+(StyleDistance, nearest centroid, no training).
+
+| corpus | writers | chance | surface: 1 text / 10 texts | full: 1 / 10 | style embedding: 1 / 10 |
+|---|---|---|---|---|---|
+| Customer Support on Twitter (brand replies) | 10 brands | 10% | 64% / 95% | **77% / 100%** | 61% / 93% |
+| Project Gutenberg novels (narration) | 8 authors | 12.5% | 33% / 76% | **47% / 92%** | 31% / 64% |
+
+The full feature set beats the purpose-built style embedding on both corpora, and the cheap
+portable subset is close behind on tweets. A voice shows over several messages: ten texts are
+enough to identify the writer almost every time.
+
+Caveats. Book test passages come from the same novels as training passages (disjoint blocks), not
+from unseen novels. Many brands sign replies with agent initials (`^TN`); that is part of brand
+voice, but it makes brand attribution easier than attribution in general.
+
+Data: twcs from the Hugging Face mirror `SunidhiSriram/twcs` @ `b03fa0a7` of ThoughtVector's
+*Customer Support on Twitter* (CC BY-NC-SA 4.0), first 700k rows, English turns only. Books: 23
+Project Gutenberg texts by Austen, Dickens, Twain, Doyle, Wilde, C. Brontë, Hardy and Wells.
+
+<!-- sections 3–5 are filled in as the remaining evals complete -->
