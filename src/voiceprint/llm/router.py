@@ -16,8 +16,8 @@ from ..config import Config, StageModel, Tier
 from .base import LLM, Cache, CallResult, Ledger, LLMError, Refused, Unavailable
 from .providers import available, make_provider
 
-ORDER = ["anthropic", "openai", "gemini", "ollama"]
-DEFAULT_MODEL = {"anthropic": "claude-opus-5", "openai": "gpt-5", "gemini": "gemini-3.8-flash", "ollama": "qwen2.5:7b-instruct"}
+ORDER = ["anthropic", "openai", "gemini", "ollama", "session"]
+DEFAULT_MODEL = {"anthropic": "claude-opus-5", "openai": "gpt-5", "gemini": "gemini-3.8-flash", "ollama": "qwen2.5:7b-instruct", "session": "claude-opus-5.5"}
 REFUSAL_FALLBACK = {"claude-opus-5": "claude-opus-4-8", "claude-sonnet-5": "claude-opus-4-8"}
 # Sustained overload (every retry a 429/5xx) moves to a sibling model of the same provider, so data
 # never crosses to a provider the config did not choose. Each hop is recorded in the manifest.
@@ -49,7 +49,7 @@ class Router:
             raise LLMError("LLM stages are disabled in this config")
         if self.avail.get(sm.provider):
             return sm.provider, sm.model
-        for p in ORDER:
+        for p in [p for p in ORDER if p in self.cfg.llm.fallback_providers]:
             if self.avail.get(p):
                 self.substitutions.append(f"{sm.provider}/{sm.model} unavailable; using {p}/{DEFAULT_MODEL[p]}")
                 return p, DEFAULT_MODEL[p]
@@ -60,6 +60,9 @@ class Router:
         provider, model = self._resolve(sm)
         if raw_text and not (self.cfg.tier == Tier.frontier_direct and self.cfg.privacy.raw_to_provider_acknowledged):
             raise LLMError("refusing to send non-anonymised text to a provider outside the frontier-direct tier")
+        if provider == "session" and not self.corpus_public:
+            raise LLMError("the session provider is for public or synthetic corpora only: a chat session is not a "
+                           "zero-retention API path, so private text must not be pasted into it")
         if provider == "gemini" and not self.corpus_public and not self.cfg.privacy.allow_unverified_gemini_tier:
             raise LLMError(
                 "refusing to send a private corpus to Gemini: the free tier may use submitted content. "

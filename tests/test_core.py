@@ -197,3 +197,58 @@ def test_cli_imports_and_lists_commands():
     assert res.exit_code == 0
     for cmd in ("extract", "score", "eval", "ts-lib", "doctor"):
         assert cmd in res.output
+
+
+def test_provider_reads_retry_delay_and_quota():
+    from voiceprint.llm.base import Provider
+
+    err = Exception("429 RESOURCE_EXHAUSTED {'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'quotaValue': '5'}, {'retryDelay': '32s'}")
+    p = Provider("m")
+    assert p.retry_after(err) == 32.0
+    assert p.quota_rpm(err) == 5
+    assert p.retry_after(Exception("boom")) is None
+
+
+def test_batched_verify_keeps_distinctive_rules_only():
+    import re as _re
+
+    class FakeJudge:
+        label = "fake"
+        calls = 0
+
+        def json(self, system, user, schema, max_tokens):
+            FakeJudge.calls += 1
+            msgs = _re.findall(r"^\d+\. (.*)$", user.split("MESSAGES")[1], _re.M)
+            rules_ = _re.findall(r"^R(\d+)\. (.*)$", user, _re.M)
+            out = []
+            for num, stmt in rules_:
+                if "exclamation" in stmt:
+                    out.append({"rule": int(num), "follows": ["!" in m for m in msgs]})
+                else:  # "Be polite": everyone complies, so it is not distinctive
+                    out.append({"rule": int(num), "follows": [True] * len(msgs)})
+            return schema.model_validate({"judgements": out}), None
+
+    target = [f"great news {i}!" for i in range(30)]
+    ref = [f"noted {i}." for i in range(30)]
+    rs = [rules.Rule(statement="Use exclamation marks"), rules.Rule(statement="Be polite")]
+    rules.verify(FakeJudge(), rs, target, ref)
+    assert FakeJudge.calls == 1
+    assert rs[0].kept and rs[0].verification["target_compliance"] == 1.0 and rs[0].verification["reference_compliance"] == 0.0
+    assert not rs[1].kept  # true of the target but not distinctive
+
+
+def test_verify_recalibrates_overstated_strength():
+    class Judge:
+        label = "fake"
+
+        def json(self, system, user, schema, max_tokens):
+            import re as _re
+
+            msgs = _re.findall(r"^\d+\. (.*)$", user.split("MESSAGES")[1], _re.M)
+            return schema.model_validate({"judgements": [{"rule": 1, "follows": ["🙂" in m for m in msgs]}]}), None
+
+    target = [f"ok {i} 🙂" if i % 10 < 6 else f"ok {i}" for i in range(40)]  # 60% of target turns
+    ref = [f"fine {i}." for i in range(40)]
+    rule = rules.Rule(statement="End on 🙂", strength="usually")
+    rules.verify(Judge(), [rule], target, ref)
+    assert rule.kept and rule.strength in ("often", "usually")

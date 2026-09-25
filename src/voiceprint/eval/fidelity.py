@@ -29,15 +29,33 @@ from ..llm.router import Router
 from ..pipeline import split_docs
 from ..schema import Corpus
 
-BASE_SYSTEM = "Reply to the message below as the person it was sent to. Be helpful and natural. Reply with the message only."
+BASE_SYSTEM = ("You reply to messages as the person they were sent to. Be helpful and natural. Each numbered message is a "
+               "separate conversation; reply to each independently.")
+BATCH = 10  # items per call: 40 items cost 12 calls, not 120 (free-tier Gemini allows 20 per model per day)
 
 
-class Pick(BaseModel):
-    more_like_target: str  # "A" or "B"
+class Replies(BaseModel):
+    replies: list[str]
 
 
-JUDGE = """You compare two replies against real examples of one writer's messages. Pick the reply whose STYLE (wording, tone,
-length, punctuation, rhythm, habits) is more like the writer's. Ignore which reply is more helpful. Answer "A" or "B"."""
+class Picks(BaseModel):
+    picks: list[str]  # "A" or "B", one per pair
+
+
+JUDGE = """You compare pairs of replies against real examples of one writer's messages. For each pair, pick the reply whose
+STYLE (wording, tone, length, punctuation, rhythm, habits) is more like the writer's. Ignore which is more helpful.
+Answer "A" or "B" for every pair, in order."""
+
+
+def _batched_replies(llm, system: str, messages: list[str]) -> list[str]:
+    out: list[str] = []
+    for s0 in range(0, len(messages), BATCH):
+        part = messages[s0 : s0 + BATCH]
+        body = "\n\n".join(f"{i + 1}. {m}" for i, m in enumerate(part))
+        parsed, _ = llm.json(system, f"MESSAGES\n{body}\n\nReturn exactly {len(part)} replies, in order, each the reply text only.", Replies, 400 * len(part))
+        got = [r.strip() for r in parsed.replies][: len(part)]
+        out.extend(got + [""] * (len(part) - len(got)))
+    return out
 
 
 def run(voice_dir: Path, corpus: Corpus, speaker: str, out: Path, n: int = 40, public: bool = True, seed: int = 7, cfg: Config | None = None,
@@ -56,15 +74,12 @@ def run(voice_dir: Path, corpus: Corpus, speaker: str, out: Path, n: int = 40, p
     items = rng.sample(held, min(n, len(held)))
     router = Router(cfg, corpus_public=public)
     gen, judge = router.stage("generate"), router.stage("judge")
-    base, voiced, real, ctx = [], [], [], []
-    for i, t in enumerate(items):
-        m = prev[t.key].text
-        ctx.append(m)
-        real.append(t.text)
-        base.append(gen.text(BASE_SYSTEM, m, 600).text.strip())
-        voiced.append(gen.text(voiced_system, m, 600).text.strip())
-        if i % 10 == 9:
-            progress(f"  generated {i + 1}/{len(items)}")
+    ctx = [prev[t.key].text for t in items]
+    real = [t.text for t in items]
+    base = _batched_replies(gen, BASE_SYSTEM, ctx)
+    progress(f"  generated {len(base)} baseline replies")
+    voiced = _batched_replies(gen, voiced_system + "\n\nEach numbered message is a separate conversation; reply to each independently.", ctx)
+    progress(f"  generated {len(voiced)} voiced replies")
     sc = data["scorer"]
     s_base, s_voiced, s_real = (scorer.score_surface(sc, x) for x in (base, voiced, real))
     cents = scorer.style_centroids([e["text"] for e in exemplars] + real[: len(real) // 2], [])  # target-only centroid
@@ -73,12 +88,15 @@ def run(voice_dir: Path, corpus: Corpus, speaker: str, out: Path, n: int = 40, p
     models.release()
     # blind pairwise judgement
     examples = "\n".join(f"- {e['text']}" for e in exemplars[:12])
-    wins = 0
-    for b, v in zip(base, voiced):
-        flip = rng.random() < 0.5
-        a_, b_ = (v, b) if flip else (b, v)
-        p, _ = judge.json(JUDGE, f"WRITER'S REAL MESSAGES\n{examples}\n\nREPLY A\n{a_}\n\nREPLY B\n{b_}", Pick, 50)
-        wins += (p.more_like_target.strip().upper().startswith("A")) == flip
+    wins, judged = 0, 0
+    flips = [rng.random() < 0.5 for _ in base]  # voiced shown as A when flip, else as B
+    for s0 in range(0, len(base), BATCH):
+        pairs = list(zip(base[s0 : s0 + BATCH], voiced[s0 : s0 + BATCH], flips[s0 : s0 + BATCH]))
+        body = "\n\n".join(f"PAIR {i + 1}\nA: {v if f else b}\nB: {b if f else v}" for i, (b, v, f) in enumerate(pairs))
+        p, _ = judge.json(JUDGE, f"WRITER'S REAL MESSAGES\n{examples}\n\n{body}\n\nReturn exactly {len(pairs)} picks.", Picks, 60 * len(pairs))
+        for pick, (_, _, f) in zip(p.picks, pairs):
+            judged += 1
+            wins += pick.strip().upper().startswith("A") == f
     # content preservation (bidirectional entailment)
     e1 = neural._nli_entailment(voiced, base)
     e2 = neural._nli_entailment(base, voiced)
@@ -87,7 +105,7 @@ def run(voice_dir: Path, corpus: Corpus, speaker: str, out: Path, n: int = 40, p
         "n": len(items), "generator": gen.label, "judge": judge.label,
         "surface_score": {"baseline": round(float(s_base.mean()), 3), "voiced": round(float(s_voiced.mean()), 3), "real": round(float(s_real.mean()), 3)},
         "style_similarity": {"baseline": round(float(y_base.mean()), 3), "voiced": round(float(y_voiced.mean()), 3), "real": round(float(y_real.mean()), 3)},
-        "judge_voiced_win_rate": round(wins / max(len(items), 1), 3),
+        "judge_voiced_win_rate": round(wins / max(judged, 1), 3), "judged_pairs": judged,
         "content_preserved_bidirectional": round(float(np.mean((e1 > 0.5) & (e2 > 0.5))), 3),
         "content_entailed_voiced_from_baseline": round(float(np.mean(e2 > 0.5)), 3),
         "cost": router.ledger.report(),

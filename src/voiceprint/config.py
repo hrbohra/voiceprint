@@ -20,7 +20,7 @@ class Tier(str, Enum):
 
 
 class StageModel(BaseModel):
-    provider: Literal["anthropic", "openai", "gemini", "ollama", "none"] = "anthropic"
+    provider: Literal["anthropic", "openai", "gemini", "ollama", "session", "none"] = "anthropic"
     model: str = "claude-opus-5"
 
 
@@ -38,6 +38,9 @@ class LLMConfig(BaseModel):
     budget_gbp: float = 20.0
     cache_dir: str = ".voiceprint/cache"
     max_concurrency: int = 4
+    # Providers the router may substitute when the configured one has no credentials. Ollama is not
+    # in the default list: a local 7B model never silently stands in for a frontier stage.
+    fallback_providers: list[str] = Field(default_factory=lambda: ["anthropic", "openai", "gemini"])
     timeout_s: float = 90.0
 
 

@@ -11,6 +11,7 @@ Corpora (not redistributed; fetch them yourself, see RESULTS.md):
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -23,6 +24,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA, RESULTS = ROOT / "data" / "public", ROOT / "results"
 TWCS_ROWS = 700_000
 BRAND = "AmazonHelp"
+# Test runs: frontier stages are answered in the Claude Code session (configs/session.yaml) unless overridden.
+CFG = Config.load(os.environ.get("VOICEPRINT_CONFIG", str(ROOT / "configs" / "session.yaml")))
 
 
 def twcs() -> Corpus:
@@ -44,11 +47,11 @@ def main(what: str) -> None:
 
         c = twcs()
         brands = [s for s, n in c.speakers().items() if s != "customer"][:12]
-        res = pipeline.run(c, Config(), targets=[BRAND], reference_speakers=[b for b in brands if b != BRAND], public=True, max_reference=6000)
+        res = pipeline.run(c, CFG, targets=[BRAND], reference_speakers=[b for b in brands if b != BRAND], public=True, max_reference=6000)
         pipeline.write(res, RESULTS / f"voice_{BRAND}")
         out["extract"] = {"rules_kept": sum(r["kept"] for r in res.data["rules"]), "scorer_eval": res.data["scorer_eval"], "cost": res.data["manifest"]["cost"]}
     if what in ("fidelity", "all"):
-        out["fidelity"] = fidelity.run(RESULTS / f"voice_{BRAND}", twcs(), BRAND, RESULTS / "fidelity_twcs", n=40, public=True, cfg=Config())["summary"]
+        out["fidelity"] = fidelity.run(RESULTS / f"voice_{BRAND}", twcs(), BRAND, RESULTS / "fidelity_twcs", n=40, public=True, cfg=CFG)["summary"]
     print(json.dumps(out, indent=2, default=str))
 
 

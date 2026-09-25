@@ -8,6 +8,6 @@ run planted_llm $PY -m voiceprint.cli eval planted -o results/planted_llm
 run books $PY scripts/public_evals.py books
 run twcs $PY scripts/public_evals.py twcs
 run curve $PY scripts/public_evals.py curve
-run extract $PY scripts/public_evals.py extract
-run fidelity $PY scripts/public_evals.py fidelity
+VOICEPRINT_CONFIG=configs/session.yaml run extract $PY scripts/public_evals.py extract
+VOICEPRINT_CONFIG=configs/session.yaml run fidelity $PY scripts/public_evals.py fidelity
 echo "ALL DONE $(date +%T)" > scratch/queue.done

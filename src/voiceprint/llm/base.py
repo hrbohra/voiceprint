@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sqlite3
 import threading
 import time
@@ -39,6 +40,7 @@ PRICES: dict[str, tuple[float, float]] = {
     # Gemini 3.x flash list prices were not confirmed at build time; priced at 2.5 Pro so the budget
     # guard errs high rather than low.
     "gemini-3.8-flash": (1.25, 10.0),
+    "claude-opus-5.5": (0.0, 0.0),  # session provider: answered in a Claude Code session, not billed per token
     "gemini-3.7-flash": (1.25, 10.0),
     "gemini-3.6-flash": (1.25, 10.0),
     "gemini-3.5-flash": (1.25, 10.0),
@@ -157,11 +159,47 @@ class Provider:
         """Whether an error is worth retrying (rate limits, 5xx, network)."""
         return False
 
+    def retry_after(self, err: Exception) -> float | None:
+        """Seconds the server asked us to wait, if it said (Retry-After, RetryInfo)."""
+        m = re.search(r"retryDelay'?:\s*'?(\d+(?:\.\d+)?)s", str(err)) or re.search(r"retry[- ]after[^\d]{0,5}(\d+(?:\.\d+)?)", str(err), re.I)
+        return float(m.group(1)) if m else None
+
+    def quota_rpm(self, err: Exception) -> int | None:
+        """Requests-per-minute quota reported with a 429, if any (e.g. Gemini free tier: 5)."""
+        if "PerMinute" not in str(err):
+            return None
+        m = re.search(r"quotaValue'?:\s*'?(\d+)", str(err))
+        return int(m.group(1)) if m else None
+
+
+class Pacer:
+    """Minimum spacing between calls per provider/model, learned from the quota a 429 reports. Shared
+    by every stage in the process, so five stages cannot each spend the same 5-per-minute quota."""
+
+    _interval: dict[str, float] = {}
+    _last: dict[str, float] = {}
+    _lock = threading.Lock()
+
+    @classmethod
+    def wait(cls, key: str) -> None:
+        with cls._lock:
+            gap = cls._interval.get(key, 0.0)
+            now = time.monotonic()
+            ready = cls._last.get(key, 0.0) + gap
+            cls._last[key] = max(now, ready)
+        if ready > now:
+            time.sleep(ready - now)
+
+    @classmethod
+    def learn(cls, key: str, rpm: int) -> None:
+        with cls._lock:
+            cls._interval[key] = max(cls._interval.get(key, 0.0), 60.0 / max(rpm, 1) * 1.05)
+
 
 class LLM:
     """What the pipeline stages use: a provider plus cache, ledger, retries and validation."""
 
-    def __init__(self, provider: Provider, cache: Cache, ledger: Ledger, stage: str, retries: int = 4):
+    def __init__(self, provider: Provider, cache: Cache, ledger: Ledger, stage: str, retries: int = 6):
         self.p = provider
         self.cache = cache
         self.ledger = ledger
@@ -185,6 +223,8 @@ class LLM:
         self.ledger.check(self._estimate_gbp(system, user, max_tokens))
         last: Exception | None = None
         for attempt in range(self.retries + 1):
+            pace_key = f"{self.p.name}/{self.p.model}"
+            Pacer.wait(pace_key)
             try:
                 res = self.p._call(system, user, max_tokens, schema)
                 if schema is not None:
@@ -200,6 +240,15 @@ class LLM:
                 last = e
                 if not self.p.transient(e):
                     raise LLMError(f"{self.p.name}/{self.p.model}: {type(e).__name__}: {e}") from e
+                if "PerDay" in str(e):  # a daily quota will not recover by waiting: let the router fail over now
+                    raise Unavailable(f"{self.p.name}/{self.p.model}: daily quota exhausted") from e
+                rpm = self.p.quota_rpm(e)
+                if rpm:
+                    Pacer.learn(pace_key, rpm)
+                server_wait = self.p.retry_after(e)
+                if server_wait is not None:
+                    time.sleep(min(server_wait + 1.0, 120.0))
+                    continue
             time.sleep(min(30.0, 1.5 * 2**attempt))
         msg = f"{self.p.name}/{self.p.model}: gave up after {self.retries + 1} attempts: {last}"
         if isinstance(last, (ValidationError, json.JSONDecodeError)):

@@ -1,0 +1,9 @@
+# Test configuration: every frontier LLM stage is answered by a Claude model in a Claude Code session
+# (llm/session.py). Public and synthetic corpora only; the router refuses private data on this provider.
+llm:
+  induce:   {provider: session, model: claude-opus-5.5}
+  merge:    {provider: session, model: claude-opus-5.5}
+  judge:    {provider: session, model: claude-opus-5.5}
+  generate: {provider: session, model: claude-opus-5.5}
+  label:    {provider: session, model: claude-opus-5.5}
+  fallback_providers: []

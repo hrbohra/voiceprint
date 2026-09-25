@@ -160,6 +160,10 @@ def make_provider(provider: str, model: str, timeout_s: float = 90.0) -> Provide
             return GeminiProvider(model, timeout_s)
         case "ollama":
             return OllamaProvider(model, timeout_s)
+        case "session":
+            from .session import SessionProvider
+
+            return SessionProvider(model, timeout_s)
     raise LLMError(f"unknown provider {provider!r}")
 
 
@@ -175,6 +179,7 @@ def available() -> dict[str, bool]:
         "openai": bool(os.environ.get("OPENAI_API_KEY")),
         "gemini": bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")),
         "ollama": ollama_up,
+        "session": True,  # no credentials needed; only used when a stage names it (never in the default fallback list)
     }
 
 

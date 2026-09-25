@@ -66,10 +66,6 @@ class RuleList(BaseModel):
     rules: list[Rule]
 
 
-class Judgement(BaseModel):
-    follows: list[bool] = Field(description="One entry per numbered message, in order: does it follow the rule?")
-
-
 # ── 1. statistical rules ─────────────────────────────────────────────────────
 
 FEATURE_TEXT: dict[str, tuple[str, str, str]] = {
@@ -275,35 +271,77 @@ def merge(llm, brief: str, candidates: list[Rule], max_rules: int = 30) -> list[
 
 # ── 3. verification on held-out turns ───────────────────────────────────────
 
-JUDGE_SYSTEM = """You check whether messages follow a writing rule. Judge only the rule, not quality. A message the rule's
-situation does not apply to counts as NOT following it. Answer with one boolean per message, in order."""
+JUDGE_SYSTEM = """You check whether messages follow writing rules. Judge each rule separately and only that rule, not
+quality. A message the rule's situation does not apply to counts as NOT following it. For every rule, return one
+boolean per message, in message order."""
+
+
+class RuleJudgement(BaseModel):
+    rule: int = Field(description="The rule number as given")
+    follows: list[bool] = Field(description="One entry per numbered message, in order")
+
+
+class Judgements(BaseModel):
+    judgements: list[RuleJudgement]
+
+
+def _band(rate: float) -> Strength:
+    return next(s for s in ("always", "usually", "often", "sometimes") if rate >= STRENGTH_MIN[s] - 0.1) if rate >= 0.1 else "rarely"
+
+
+def _decide(rule: Rule, t_rate: float, r_rate: float | None, min_margin: float) -> bool:
+    """Distinctiveness decides whether a rule is kept; the held-out rate decides how strong it is.
+
+    A rule the target follows clearly more than the reference is a real trait even if the inducer
+    overstated it ("usually" when the held-out rate is 58%). Its strength is recalibrated to the
+    observed band instead of discarding it (planted eval: the emoji-ending rule, 58% vs 0%, was lost
+    to a 2-point shortfall before this). A rule that is not distinctive is dropped however true."""
+    if rule.strength in ("rarely", "never"):
+        return t_rate <= STRENGTH_MAX[rule.strength] + 0.1 and (r_rate is None or r_rate - t_rate >= min_margin)
+    distinctive = r_rate is None or t_rate - r_rate >= min_margin
+    if not distinctive or t_rate < 0.1:
+        return False
+    if t_rate < STRENGTH_MIN[rule.strength] - 0.1:
+        rule.verification["strength_claimed"] = rule.strength
+        rule.strength = _band(t_rate)
+    return True
 
 
 def verify(llm, rules: list[Rule], target_heldout: list[str], reference_heldout: list[str], n: int = 24, seed: int = 7,
-           min_margin: float = 0.15) -> list[Rule]:
-    """Label n held-out target turns and n reference turns per rule in one shuffled batch (the judge
-    cannot tell which is which). Keep a rule if target compliance beats reference by min_margin and,
-    for positive strengths, reaches the strength's floor (with 10 points of slack)."""
+           min_margin: float = 0.15, rules_per_call: int = 8) -> list[Rule]:
+    """Blind held-out verification. One shared sample of n target and n reference turns, shuffled so
+    the judge cannot tell which is which; up to `rules_per_call` rules judged per call against it.
+
+    Keep a rule if target compliance beats reference by `min_margin` and, for positive strengths,
+    reaches the strength's floor (10 points of slack). Judging every rule on the same messages makes
+    rules comparable, and batching cuts calls about 8x (free-tier Gemini allows 20 per model per
+    day; decision D-35)."""
     rng = random.Random(seed)
-    for rule in rules:
-        t = rng.sample(target_heldout, min(n, len(target_heldout)))
-        r = rng.sample(reference_heldout, min(n, len(reference_heldout))) if reference_heldout else []
-        items = [(x, "t") for x in t] + [(x, "r") for x in r]
-        rng.shuffle(items)
-        body = "\n".join(f"{i + 1}. {x[:500]}" for i, (x, _) in enumerate(items))
-        scope = "" if rule.situation == "always" else f" (applies in the situation: {rule.situation})"
-        parsed, _ = llm.json(JUDGE_SYSTEM, f"RULE: {rule.statement}{scope}\n\nMESSAGES\n{body}\n\nReturn exactly {len(items)} booleans.", Judgement, max_tokens=1500)
-        flags = (parsed.follows + [False] * len(items))[: len(items)]
-        tc = [f for f, (_, g) in zip(flags, items) if g == "t"]
-        rc = [f for f, (_, g) in zip(flags, items) if g == "r"]
-        t_rate = sum(tc) / max(len(tc), 1)
-        r_rate = sum(rc) / max(len(rc), 1) if rc else None
-        negative = rule.strength in ("rarely", "never")
-        if negative:
-            ok = t_rate <= STRENGTH_MAX[rule.strength] + 0.1 and (r_rate is None or r_rate - t_rate >= min_margin)
-        else:
-            ok = t_rate >= STRENGTH_MIN[rule.strength] - 0.1 and (r_rate is None or t_rate - r_rate >= min_margin)
-        rule.verification.update({"target_compliance": round(t_rate, 3), "reference_compliance": None if r_rate is None else round(r_rate, 3),
-                                  "n_target": len(tc), "n_reference": len(rc), "judge": getattr(llm, "label", "")})
-        rule.kept = bool(ok)
+    t = rng.sample(target_heldout, min(n, len(target_heldout)))
+    r = rng.sample(reference_heldout, min(n, len(reference_heldout))) if reference_heldout else []
+    items = [(x, "t") for x in t] + [(x, "r") for x in r]
+    rng.shuffle(items)
+    body = "\n".join(f"{i + 1}. {x[:400]}" for i, (x, _) in enumerate(items))
+    for s0 in range(0, len(rules), rules_per_call):
+        group = rules[s0 : s0 + rules_per_call]
+        listing = "\n".join(
+            f"R{j + 1}. {rule.statement}" + ("" if rule.situation == "always" else f" (applies when: {rule.situation})")
+            for j, rule in enumerate(group))
+        user = (f"RULES\n{listing}\n\nMESSAGES\n{body}\n\nFor each of the {len(group)} rules, return rule number and exactly "
+                f"{len(items)} booleans.")
+        parsed, _ = llm.json(JUDGE_SYSTEM, user, Judgements, max_tokens=400 + 12 * len(items) * len(group))
+        by_rule = {j.rule: j.follows for j in parsed.judgements}
+        for j, rule in enumerate(group):
+            flags = by_rule.get(j + 1)
+            if flags is None or len(flags) != len(items):
+                rule.verification.update({"error": "judge returned no or malformed labels"})
+                rule.kept = False
+                continue
+            tc = [f for f, (_, g) in zip(flags, items) if g == "t"]
+            rc = [f for f, (_, g) in zip(flags, items) if g == "r"]
+            t_rate = sum(tc) / max(len(tc), 1)
+            r_rate = sum(rc) / max(len(rc), 1) if rc else None
+            rule.verification.update({"target_compliance": round(t_rate, 3), "reference_compliance": None if r_rate is None else round(r_rate, 3),
+                                      "n_target": len(tc), "n_reference": len(rc), "judge": getattr(llm, "label", "")})
+            rule.kept = bool(_decide(rule, t_rate, r_rate, min_margin))
     return rules

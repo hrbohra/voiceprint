@@ -62,7 +62,8 @@ def cap_by_doc(turns: list[Turn], n: int, seed: int) -> list[Turn]:
 
 def brief(name: str, table: pd.DataFrame, kw: dict, dial: dict, acts: dict, social: dict, sits: list, top: int = 30) -> str:
     L = [f"Target: {name}. Positive effect = target uses MORE than reference."]
-    for f, r in table.head(top).iterrows():
+    shown = table[[not f.endswith(rules_mod.DIAGNOSTIC_SUFFIXES) for f in table.index]] if len(table) else table
+    for f, r in shown.head(top).iterrows():
         L.append(f"- {f}: target {r['target_mean']:.3g} (present in {r['target_present']:.0%} of turns) vs reference {r['reference_mean']:.3g}; g={r['hedges_g']:.2f}")
     if kw.get("over"):
         L.append("Over-used terms: " + ", ".join(x["term"] for x in kw["over"][:25]))

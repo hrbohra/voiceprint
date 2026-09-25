@@ -115,15 +115,15 @@ def _run_one(corpus: Corpus, cfg: Config, use_llm: bool, progress):
 
 
 def _llm_match(desc: str, statement: str) -> bool:
-    keys = {"P1": ["name"], "P2": ["emoji"], "P3": ["lowercase", "lower-case", "lower case"], "P4": ["contraction", "contract"],
+    keys = {"P1": ["name"], "P2": ["emoji", "🙂"], "P3": ["lowercase", "lower-case", "lower case"], "P4": ["contraction", "contract"],
             "P5": ["hedg", "i think", "soften"], "P6": ["question", "anything else", "offer"]}
     return any(k in statement.lower() for k in keys[desc])
 
 
-def run(out: Path, n_docs: int = 120, use_llm: bool = True, seed: int = 7, progress=print) -> dict:
+def run(out: Path, n_docs: int = 120, use_llm: bool = True, seed: int = 7, progress=print, cfg: Config | None = None) -> dict:
     from .. import pipeline
 
-    cfg = Config(bootstrap=300, seed=seed)
+    cfg = (cfg or Config()).model_copy(update={"bootstrap": 300, "seed": seed})
     corpus = make_corpus(n_docs, seed, plant=True)
     res = _run_one(corpus, cfg, use_llm, progress)
     kept_stats = [r for r in res.data["rules"] if r["source"] == "stats" and r["kept"]]

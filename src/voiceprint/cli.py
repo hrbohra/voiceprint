@@ -118,11 +118,13 @@ app.add_typer(eval_app, name="eval")
 
 
 @eval_app.command("planted")
-def eval_planted(out: Path = typer.Option(Path("results/planted"), "--out", "-o"), n_docs: int = 120, no_llm: bool = False) -> None:
+def eval_planted(out: Path = typer.Option(Path("results/planted"), "--out", "-o"), n_docs: int = 120, no_llm: bool = False,
+                 config: Optional[Path] = typer.Option(None, "--config", "-c")) -> None:
     """Synthetic corpus with known, planted voice rules: does the extractor recover them?"""
+    from .config import Config
     from .eval import planted
 
-    res = planted.run(out, n_docs=n_docs, use_llm=not no_llm, progress=con.print)
+    res = planted.run(out, n_docs=n_docs, use_llm=not no_llm, progress=con.print, cfg=Config.load(config))
     con.print_json(json.dumps(res["summary"]))
 
 
@@ -149,12 +151,14 @@ def eval_curve(corpus: Path, speaker: str, out: Path = typer.Option(Path("result
 
 
 @eval_app.command("fidelity")
-def eval_fidelity(voice: Path, out: Path = typer.Option(Path("results/fidelity"), "--out", "-o"), n: int = 40, public: bool = True) -> None:
-    """Generate replies with and without the prompt pack; measure voice score, judge preference and
-    content preservation (NLI)."""
+def eval_fidelity(voice: Path, corpus: Path, speaker: str, out: Path = typer.Option(Path("results/fidelity"), "--out", "-o"),
+                  fmt: Optional[str] = None, n: int = 40, public: bool = True) -> None:
+    """Generate replies to held-out messages with and without the prompt pack (VOICE is an extract
+    output directory); measure voice score, blind judge preference and content preservation (NLI)."""
     from .eval import fidelity
+    from .ingest import load
 
-    res = fidelity.run(voice, out, n=n, public=public, progress=con.print)
+    res = fidelity.run(voice, load(corpus, fmt), speaker, out, n=n, public=public, progress=con.print)
     con.print_json(json.dumps(res["summary"]))
 
 
