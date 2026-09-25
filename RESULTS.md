@@ -90,4 +90,58 @@ chance-level ones that the held-out check is there to catch. For Kiki's roughly 
 conversations this sits well inside the stable region: small corpora work, and volume buys
 certainty about the rules.
 
-<!-- sections 4–5 are filled in as the remaining evals complete -->
+## 4. A full extraction: AmazonHelp
+
+`python scripts/public_evals.py extract` → [`results/voice_AmazonHelp/`](results/voice_AmazonHelp/) (`VOICE.md`, `voice.json`, prompt pack, scorer)
+
+2,000 AmazonHelp turns (sampled by conversation; 376 held out) against 9 other brands. The
+frontier stages were induction over 6 chunks of 60 turns, one merge, and blind verification on
+24 + 24 held-out turns. Verification kept 10 of 15 merged LLM rules, plus 4 statistical rules.
+Scorer held-out AUC: 0.84 (portable surface model), 0.89 (with style embedding). The
+memorisation check found no leaks.
+
+| verified rule | AmazonHelp | other brands |
+|---|---|---|
+| End with " ^" + agent initials | 100% | 13% |
+| Skip "Hi/Hey"; begin with the apology or answer | 92% | 75% |
+| Move the issue to a private channel via a link | 33% | 13% |
+| Speak as "we" and promise follow-up | 29% | 13% |
+| Open with an apology for the specific problem | 21% | 0% |
+| Formal service formulae ("Kindly", "revert", "correspondence") | 17% | 0% |
+
+Rejected though true: the privacy warning (8% vs 0%), "I understand your concern" (8% vs 0%),
+and tracking/carrier questions (8% vs 0%). This is a **power limit**, not a false rule. With 24
+judged turns per side, a habit in under about 1 message in 6 cannot clear the 15-point margin.
+Next step: a larger judged sample and an exact test (Fisher) in place of a fixed margin.
+
+## 5. Does an LLM given the pack write in the voice, and say the same thing?
+
+`python scripts/public_evals.py fidelity` (40 held-out AmazonHelp conversations, none shown to the model as exemplars)
+
+The same generator replies twice to each incoming tweet: **baseline** ("reply helpfully and
+naturally") and **voiced** (the standard prompt pack).
+
+| | baseline | voiced | real AmazonHelp reply |
+|---|---|---|---|
+| voice scorer (portable, model-free) | 0.04 | **0.77** | 0.68 |
+| style-embedding similarity (StyleDistance) | 0.83 | **0.94** | 0.93 |
+| content preserved (NLI entailment both ways) | | 25% | |
+| voiced reply entailed by baseline | | 50% | |
+
+The pack moves generation to the measured voice: level with the real replies on style similarity,
+and slightly past them on the scorer (the pack applies the habits more consistently than people
+do). The pairwise style judge preferred the voiced reply in 40/40 pairs. The judge was the same
+session model that wrote both replies, applying an explicit marker-count criterion, so this is
+**not an independent judgement** and is reported only for completeness.
+
+Content preservation is the weak spot, and the reason is instructive. Some verified rules
+**carry content**: "move the issue to a private channel via a link" and "promise follow-up"
+change *what* is said, not only *how*. For a product like Kiki, where the content must come
+only from facts, those rules must be separated out. Next step: tag each rule as style-only or
+content-bearing (a rule is content-bearing when applying it changes NLI entailment against the
+unvoiced reply), and build facts-only packs from style-only rules.
+
+Frontier stages (generation and judging) in this section were answered by Claude Opus 5.5 in a
+Claude Code session through the `session` provider.
+
+<!-- section 6 (signature ablation) is filled in when it completes -->
