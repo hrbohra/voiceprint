@@ -30,12 +30,15 @@ def _chunks(idx: np.ndarray, size: int, rng: random.Random) -> list[np.ndarray]:
 
 
 def run(corpus: Corpus, out: Path, n_speakers: int = 10, min_turns: int = 150, max_turns: int = 400, public: bool = True,
-        seed: int = 7, progress=print) -> dict:
+        seed: int = 7, progress=print, exclude: tuple[str, ...] = ("customer", "unknown")) -> dict:
+    """`exclude` removes pseudo-speakers that pool many writers (all customers in a support corpus):
+    telling "a brand" from "everyone else" is not authorship attribution, and including them inflated
+    an earlier run (decision D-49)."""
     from sklearn.linear_model import LogisticRegression
     from sklearn.preprocessing import StandardScaler
 
     rng = random.Random(seed)
-    spk = [s for s, n in corpus.speakers().items() if n >= min_turns][:n_speakers]
+    spk = [s for s, n in corpus.speakers().items() if n >= min_turns and s not in exclude][:n_speakers]
     if len(spk) < 2:
         raise ValueError(f"need at least 2 speakers with >= {min_turns} turns")
     train, test = [], []
