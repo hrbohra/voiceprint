@@ -121,6 +121,12 @@ flowchart LR
 | D-39 | Distinctiveness decides whether a rule is kept; the held-out rate decides its strength. An overstated but distinctive rule is recalibrated (for example "usually" → "often", recording `strength_claimed`), not discarded. | Planted eval: "end on 🙂" (58% vs 0% held-out) was dropped on a 2-point shortfall against the "usually" floor. |
 | D-40 | Feature extraction checkpoints each stage and each 512-turn block of the model stages, and resumes from them. | A session restart killed an hour of NLI on 3,200 book passages. |
 | D-41 | The judge's labels for mechanically checkable rules were produced by stating each rule's reading as an explicit criterion and applying it to every message. Tone rules used an explicit list of warmth markers. | 384 labels per call are too many to hand-copy reliably, and an explicit criterion is auditable. Recorded so the method is transparent. |
+| D-42 | Large speakers are sampled **by whole conversation** up to a cap (`max_target`; the curve caps at 1.3× its largest size). | AmazonHelp has about 40k English turns; featurising all of them would take days on this GPU. |
+| D-43 | Fidelity never tests on a message whose reply or context appears among the prompt pack's exemplars. | Brand replies are templated and recur verbatim; without this, the eval could reward copying. |
+| D-44 | Agent sign-offs (`^TN`, `-SLM`, `*Kellen`, `^Jane 2/2`) can be stripped for an ablation; brand hashtags are kept. | Measures how much brand attribution rests on signatures rather than on voice. |
+| D-45 | Statistical-rule strength is the consistency of the statement: the share of turns showing a "more" feature, the share **without** a "less" feature, and Cliff's δ for continuous features. | Reading the generated pack exposed "Rarely: skip greetings" (the opposite of the finding) and "Rarely: keep the tone sober" (presence is meaningless for a continuous score). |
+| D-46 | The memorisation check first removes cleared exemplars embedded in a larger text (the full prompt pack), then scans. Leak spans are listed in the manifest. | The one reported "leak" was an approved exemplar inside `full.txt`. The check was right to look, and wrong to match only whole outputs. |
+| D-47 | Tweets from a CC BY-NC-SA corpus are not committed: `full.txt` packs and exemplar files for public-corpus runs are git-ignored. | Keeps licensed text out of an MIT repository; rules, statistics and the scorer are ours. |
 
 ## 4. Files
 
@@ -229,3 +235,23 @@ Verified LLM rules on the planted run, held-out compliance target vs reference: 
 92% vs 0%; lowercase 75% vs 0%; contractions 100% vs 13%; 'i think' 63% vs 0%;
 'anything else you need?' 54% vs 0%; 🙂 ending 58% vs 0%; warm tone 92% vs 33%. Dropped: "one or
 two short clauses" (100% vs 100%, not distinctive).
+
+### 2026-09-25: public corpora
+
+- **Attribution** (held-out, split by document). Tweets, 10 brands: 77% per tweet and 100% per 10
+  tweets (full features), against 10% chance. Novels, 8 authors: 47% per passage and 92% per 10.
+  The full feature set beats the StyleDistance embedding on both.
+- **Data efficiency** (AmazonHelp): the effect ranking is already ρ = 0.92 at 25 turns; the rule
+  set matches the full-data set exactly from 400 turns on; scorer AUC goes from 0.86 to 0.90.
+- **Extraction** (AmazonHelp, frontier stages in session): 10 of 15 LLM rules verified, plus 4
+  statistical rules. Signature rule 100% vs 13%. Rare true habits (8% vs 0%) were rejected. This
+  is a **power limit** with 24 judged turns per side. Next: larger judged sample plus Fisher's
+  exact test.
+- **Fidelity**: portable scorer 0.04 → 0.77 (real 0.68); style similarity 0.83 → 0.94 (real
+  0.93). Content preserved both ways in only 25% of pairs. Cause: some verified rules *carry
+  content* (redirect to a link, promise follow-up). Next: tag rules as style-only or
+  content-bearing, and give facts-only products (Kiki) style-only packs.
+- The **exemplar picker** favoured short, signature-heavy fragments ("emails sent by us here:
+  <URL> 2/2"). Next: a minimum length, and skip thread continuations.
+- A session restart and a user-requested pause cost nothing, because checkpoints (D-40) resumed
+  15/15 blocks.
