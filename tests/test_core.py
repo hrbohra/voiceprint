@@ -252,3 +252,17 @@ def test_verify_recalibrates_overstated_strength():
     rule = rules.Rule(statement="End on 🙂", strength="usually")
     rules.verify(Judge(), [rule], target, ref)
     assert rule.kept and rule.strength in ("often", "usually")
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("We'd love to help. ^TN", "We'd love to help."),
+    ("Keep us posted /LS <URL>", "Keep us posted"),
+    ("Thanks! -SLM", "Thanks!"),
+    ("Would you like us to? ^Jane 2/2", "Would you like us to?"),
+    ("Kind words! #AATeam", "Kind words! #AATeam"),
+    ("Go to Settings > General > About.", "Go to Settings > General > About."),
+])
+def test_strip_signature(text, expected):
+    from voiceprint.ingest import strip_signature
+
+    assert strip_signature(text) == expected

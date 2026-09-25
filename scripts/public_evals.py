@@ -17,7 +17,7 @@ from pathlib import Path
 
 from voiceprint.config import Config
 from voiceprint.eval import attribution, curve, fidelity
-from voiceprint.ingest import english_only, load, load_twitter_support
+from voiceprint.ingest import english_only, load, load_twitter_support, without_signatures
 from voiceprint.schema import Corpus
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,6 +38,9 @@ def main(what: str) -> None:
     out = {}
     if what in ("twcs", "all"):
         out["twcs_attribution"] = attribution.run(twcs(), RESULTS / "attribution_twcs", n_speakers=10, min_turns=400, max_turns=400)["summary"]
+    if what in ("twcs_nosig", "all"):  # ablation: does brand attribution survive removing agent sign-offs?
+        out["twcs_attribution_no_signatures"] = attribution.run(without_signatures(twcs()), RESULTS / "attribution_twcs_nosig",
+                                                                n_speakers=10, min_turns=400, max_turns=400)["summary"]
     if what in ("books", "all"):
         out["books_attribution"] = attribution.run(load(DATA / "gutenberg"), RESULTS / "attribution_books", n_speakers=8, min_turns=400, max_turns=400)["summary"]
     if what in ("curve", "all"):

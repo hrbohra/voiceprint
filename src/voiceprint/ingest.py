@@ -49,6 +49,21 @@ def is_english(text: str, min_latin: float = 0.9) -> bool:
     return hits / len(ws) >= 0.15  # English prose runs ~40-50%; a stray "hi" in German is ~6%
 
 
+# Agent sign-off (support accounts) at the end: marker + initials/first name, optionally followed by "2/2" and/or a link
+SIG = re.compile(r"\s*[\^*/~\-–—]\s?[A-Z][A-Za-z]{0,14}\.?(?:\s+\d/\d)?(?:\s*<URL>)?\s*$")
+def strip_signature(text: str) -> str:
+    prev = None
+    while prev != text:
+        prev, text = text, SIG.sub("", text)
+    return text.strip()
+
+
+def without_signatures(corpus: Corpus) -> Corpus:
+    """Ablation helper: the same corpus with agent sign-offs ("^TN", "-SLM", "*Kellen") removed."""
+    return Corpus([Turn(t.doc_id, t.turn_id, t.speaker, strip_signature(t.text), t.timestamp, t.reply_to, t.meta)
+                   for t in corpus.turns], corpus.name)
+
+
 def english_only(corpus: Corpus, min_latin: float = 0.9) -> Corpus:
     return Corpus([t for t in corpus.turns if is_english(t.text, min_latin)], corpus.name)
 
