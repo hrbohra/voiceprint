@@ -79,4 +79,13 @@ def parse(texts: Iterable[str], batch_size: int = 32):
     from .. import models
 
     nlp = models.spacy_nlp()
-    return nlp.pipe(texts, batch_size=batch_size)
+    if not models.low_power():
+        return nlp.pipe(texts, batch_size=batch_size)
+
+    def rested():  # low-power mode: parse a batch, rest, repeat (GPU duty cycle, D-51)
+        texts_l = list(texts)
+        for i in range(0, len(texts_l), batch_size):
+            yield from nlp.pipe(texts_l[i : i + batch_size], batch_size=batch_size)
+            models.gpu_rest()
+
+    return rested()

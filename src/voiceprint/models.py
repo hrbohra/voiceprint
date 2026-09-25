@@ -47,7 +47,7 @@ def gpu_rest() -> None:
     if low_power():
         import time
 
-        time.sleep(float(os.environ.get("VOICEPRINT_GPU_REST_S", "0.25")))
+        time.sleep(float(os.environ.get("VOICEPRINT_GPU_REST_S", "0.6")))
 
 
 def configure(use_gpu: bool = True) -> None:
