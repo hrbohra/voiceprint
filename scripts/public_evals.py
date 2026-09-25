@@ -47,7 +47,7 @@ def main(what: str) -> None:
 
         c = twcs()
         brands = [s for s, n in c.speakers().items() if s != "customer"][:12]
-        res = pipeline.run(c, CFG, targets=[BRAND], reference_speakers=[b for b in brands if b != BRAND], public=True, max_reference=6000)
+        res = pipeline.run(c, CFG, targets=[BRAND], reference_speakers=[b for b in brands if b != BRAND], max_target=2000, public=True, max_reference=6000)
         pipeline.write(res, RESULTS / f"voice_{BRAND}")
         out["extract"] = {"rules_kept": sum(r["kept"] for r in res.data["rules"]), "scorer_eval": res.data["scorer_eval"], "cost": res.data["manifest"]["cost"]}
     if what in ("fidelity", "all"):

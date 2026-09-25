@@ -27,6 +27,22 @@ def run(corpus: Corpus, speaker: str, out: Path, sizes: list[int], public: bool 
     from sklearn.metrics import roc_auc_score
 
     tgt = [t for t in corpus.turns if t.speaker == speaker and t.text.strip()]
+    # only as many target turns as the largest size needs (plus a test share), sampled by conversation
+    rng0 = random.Random(seed)
+    if len(tgt) > int(max(sizes) * 1.3):
+        docs = sorted({t.doc_id for t in tgt})
+        rng0.shuffle(docs)
+        want, keep, n = int(max(sizes) * 1.3), set(), 0
+        by = {}
+        for t in tgt:
+            by.setdefault(t.doc_id, 0)
+            by[t.doc_id] += 1
+        for d in docs:
+            if n >= want:
+                break
+            keep.add(d)
+            n += by[d]
+        tgt = [t for t in tgt if t.doc_id in keep]
     ref = [t for t in corpus.turns if t.speaker != speaker and t.text.strip()]
     rng = random.Random(seed)
     ref = rng.sample(ref, min(len(ref), max(sizes) * 2, 4000))

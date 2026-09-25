@@ -71,6 +71,9 @@ def run(voice_dir: Path, corpus: Corpus, speaker: str, out: Path, n: int = 40, p
     tgt = [t for t in corpus.turns if t.speaker == speaker and prev.get(t.key)]
     _, held = split_docs(tgt, 0.2, cfg.seed)  # same split the extractor used
     rng = random.Random(seed)
+    # never test on anything the prompt pack shows the model (templated brand replies repeat verbatim)
+    shown = {e["text"] for e in exemplars} | {e["context"] for e in exemplars if e.get("context")}
+    held = [t for t in held if t.text not in shown and prev[t.key].text not in shown]
     items = rng.sample(held, min(n, len(held)))
     router = Router(cfg, corpus_public=public)
     gen, judge = router.stage("generate"), router.stage("judge")

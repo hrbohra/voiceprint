@@ -78,7 +78,7 @@ def brief(name: str, table: pd.DataFrame, kw: dict, dial: dict, acts: dict, soci
     return "\n".join(L)
 
 
-def run(corpus: Corpus, cfg: Config, *, targets: list[str] | None = None, reference_speakers: list[str] | None = None, use_llm: bool = True, public: bool = False,
+def run(corpus: Corpus, cfg: Config, *, targets: list[str] | None = None, reference_speakers: list[str] | None = None, max_target: int | None = None, use_llm: bool = True, public: bool = False,
         heldout_frac: float = 0.2, max_reference: int = 20000, progress=print) -> RunResult:
     t0 = time.time()
     timings: dict[str, float] = {}
@@ -108,6 +108,20 @@ def run(corpus: Corpus, cfg: Config, *, targets: list[str] | None = None, refere
 
     tset = set(targets)
     target_all = [t for t in corpus.turns if t.speaker in tset and t.text.strip()]
+    if max_target and len(target_all) > max_target:  # sample whole conversations, not scattered turns
+        rng_t = random.Random(cfg.seed)
+        docs = sorted({t.doc_id for t in target_all})
+        rng_t.shuffle(docs)
+        per_doc: dict[str, int] = {}
+        for t in target_all:
+            per_doc[t.doc_id] = per_doc.get(t.doc_id, 0) + 1
+        keep, n = set(), 0
+        for d in docs:
+            if n >= max_target:
+                break
+            keep.add(d)
+            n += per_doc[d]
+        target_all = [t for t in target_all if t.doc_id in keep][:max_target]
     # reference: named peers when given (e.g. other hosts, not the guests they talk to), else everyone else
     rset = set(reference_speakers) if reference_speakers else None
     ref_all = [t for t in corpus.turns if t.speaker not in tset and t.text.strip() and (rset is None or t.speaker in rset)]
