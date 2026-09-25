@@ -144,6 +144,9 @@ def memorisation_check(outputs: list[str], rare: RareSpans, allowed: set[str] | 
     for i, o in enumerate(outputs):
         if allowed and o in allowed:
             continue
+        for a in sorted(allowed or (), key=len, reverse=True):  # cleared exemplars may be embedded in a larger text
+            if a and a in o:
+                o = o.replace(a, " ")
         for v in rare.violations(o):
             leaks.append((i, v))
     return leaks

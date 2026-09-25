@@ -267,6 +267,7 @@ def run(corpus: Corpus, cfg: Config, *, targets: list[str] | None = None, refere
     allowed = {e["text"] for e in exemplars} | {e["context"] for e in exemplars if e["context"]}
     leaks = memorisation_check(list(pack.values()) + [voice_md(name, data)], rare_mem, allowed)
     manifest["memorisation_leaks"] = len(leaks)
+    manifest["memorisation_leak_spans"] = [s for _, s in leaks[:10]]  # auditable; a private run fails below
     if leaks and not public:
         raise RuntimeError(f"memorisation check failed: {len(leaks)} rare corpus spans in outputs, e.g. {leaks[:3]}")
     return RunResult(data, exemplars, sft, dpo, tf, rf, {"t": th, "r": rh})

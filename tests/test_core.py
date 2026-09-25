@@ -266,3 +266,20 @@ def test_strip_signature(text, expected):
     from voiceprint.ingest import strip_signature
 
     assert strip_signature(text) == expected
+
+
+def test_memorisation_check_allows_embedded_exemplars():
+    c = Corpus([Turn(f"d{i}", 0, "a", "thanks so much for letting me know") for i in range(5)]
+               + [Turn("dx", 0, "a", "my flat is at the corner of elm street and oak road")])
+    rs = RareSpans(c, n=5, k=3)
+    ex = "my flat is at the corner of elm street and oak road"
+    assert memorisation_check([f"Examples:\n- {ex}\nRules..."], rs, allowed={ex}) == []
+    assert memorisation_check([f"Examples:\n- {ex}"], rs) != []
+
+
+def test_less_direction_rule_strength_is_consistency_of_avoidance():
+    table = pd.DataFrame([{"feature": "social_greet", "target_mean": 0.07, "target_ci_lo": 0.05, "target_ci_hi": 0.09, "target_present": 0.07,
+                           "reference_mean": 0.26, "reference_present": 0.26, "hedges_g": -0.5, "cliffs_delta": -0.19, "separated": True,
+                           "n_target": 500, "n_reference": 500, "distinctiveness": 1}]).set_index("feature")
+    r = rules.statistical_rules(table)[0]
+    assert r.statement == "Skip greetings" and r.strength == "usually"

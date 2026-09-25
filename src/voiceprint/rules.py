@@ -107,7 +107,7 @@ FEATURE_TEXT: dict[str, tuple[str, str, str]] = {
     "social_request": ("pragmatics", "Ask the other person to do things", "Rarely make requests"),
     "social_refuse": ("pragmatics", "Say no plainly when needed", "Rarely refuse"),
     "formality_fscore": ("register", "Write formally (noun- and preposition-heavy)", "Write informally (verb- and pronoun-heavy)"),
-    "sentiment_score": ("affect", "Keep the tone warm and positive", "Keep the tone neutral"),
+    "sentiment_score": ("affect", "Keep the tone warm and positive", "Keep the tone sober and concerned rather than upbeat"),
     "lexical_density": ("syntax", "Pack sentences with content words", "Use light, easy sentences"),
     "imperative_sentence_rate": ("syntax", "Use direct instructions", "Avoid commands"),
     "passive_sentence_rate": ("syntax", "Use the passive voice", "Use the active voice"),
@@ -212,10 +212,18 @@ def statistical_rules(table: pd.DataFrame, min_effect: float = 0.3, top: int = 2
     for feat, r, more, (cat, stmt) in cands:
         if feat in folded:
             continue
-        present = r["target_present"]
-        strength: Strength = "usually" if present >= 0.7 else "often" if present >= 0.45 else "sometimes" if present >= 0.2 else "rarely"
+        # Strength is how consistently the statement holds. For a "more" rule that is the share of turns
+        # showing the feature; for a "less" rule ("Skip greetings") it is the share of turns *without* it.
+        # (Using the raw presence for both produced "Rarely: skip greetings", the opposite of the finding.)
+        binary = abs(r["target_mean"] - r["target_present"]) < 1e-9  # a 0/1 flag: its mean is its presence rate
+        if binary:
+            present = r["target_present"] if more else 1 - r["target_present"]
+            strength: Strength = "usually" if present >= 0.7 else "often" if present >= 0.45 else "sometimes" if present >= 0.2 else "rarely"
+        else:  # continuous (sentiment, sentence length): how consistently the target sits on its side
+            d = abs(r["cliffs_delta"])
+            strength = "usually" if d >= 0.5 else "often" if d >= 0.3 else "sometimes"
         out.append(Rule(
-            statement=stmt, category=cat, strength=strength if more else "rarely" if present < 0.2 else strength,
+            statement=stmt, category=cat, strength=strength,
             feature=feat, source="stats",
             rationale=f"target {r['target_mean']:.3g} (95% CI {r['target_ci_lo']:.3g}–{r['target_ci_hi']:.3g}) vs reference {r['reference_mean']:.3g}; Hedges g {r['hedges_g']:.2f}, Cliff's δ {r['cliffs_delta']:.2f}"
                       + (f"; also measured by {', '.join(also[feat])}" if feat in also else ""),
