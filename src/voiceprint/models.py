@@ -35,9 +35,40 @@ DIALOGUE_ACT_LABELS = ["acknowledge", "answer", "backchannel", "reply_yes", "exc
 _state = {"use_gpu": True}
 
 
+def low_power() -> bool:
+    """VOICEPRINT_LOW_POWER=1: share the machine politely (decision D-51). Idle CPU priority, 2 CPU
+    threads, small GPU batches and a rest after each batch, so a laptop stays usable and cool while a
+    long run continues. Slower per batch, but no thermal throttling and no fight with other apps."""
+    return os.environ.get("VOICEPRINT_LOW_POWER") == "1"
+
+
+def gpu_rest() -> None:
+    """Pause after a GPU batch in low-power mode, leaving the GPU idle part of the time."""
+    if low_power():
+        import time
+
+        time.sleep(float(os.environ.get("VOICEPRINT_GPU_REST_S", "0.25")))
+
+
 def configure(use_gpu: bool = True) -> None:
     _state["use_gpu"] = use_gpu
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+    if low_power():
+        threads = int(os.environ.get("VOICEPRINT_THREADS", "2"))
+        for var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+            os.environ[var] = str(threads)
+        try:
+            import torch
+
+            torch.set_num_threads(threads)
+        except ImportError:
+            pass
+        if os.name == "nt":  # IDLE_PRIORITY_CLASS: every interactive app is scheduled first
+            import ctypes
+
+            ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(), 0x40)
+        else:
+            os.nice(19)
 
 
 def device() -> str:
@@ -97,6 +128,8 @@ def encoder(key: str):
 
 
 def batch_size(default_gpu: int = 64, default_cpu: int = 16) -> int:
+    if low_power():
+        return 16 if device() == "cuda" else 8
     return default_gpu if device() == "cuda" else default_cpu
 
 

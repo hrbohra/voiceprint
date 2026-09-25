@@ -69,6 +69,7 @@ def _classify(key: str, texts: list[str], pairs: list[str] | None = None, activa
             logits = model(**enc.to(model.device)).logits.float()
             p = torch.sigmoid(logits) if activation == "sigmoid" else torch.softmax(logits, dim=-1)
             probs.append(p.cpu().numpy())
+            models.gpu_rest()
     arr = np.concatenate(probs) if probs else np.zeros((0, model.config.num_labels))
     out = np.zeros((len(texts), arr.shape[1]))
     wsum = np.zeros(len(texts))

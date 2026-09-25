@@ -35,6 +35,9 @@ def twcs() -> Corpus:
 
 
 def main(what: str) -> None:
+    from voiceprint import models
+
+    models.configure(CFG.use_gpu)  # applies VOICEPRINT_LOW_POWER (priority, threads, batch size) before any work
     out = {}
     if what in ("twcs", "all"):
         out["twcs_attribution"] = attribution.run(twcs(), RESULTS / "attribution_twcs", n_speakers=10, min_turns=400, max_turns=400)["summary"]
