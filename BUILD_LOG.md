@@ -114,6 +114,13 @@ flowchart LR
 | D-32 | Gemini default is `gemini-3.8-flash`. | `gemini-2.5-flash` returns 404 for new keys, and the API recommends 3.8. |
 | D-33 | twcs: HTML entities unescaped, `t.co` links → `<URL>`, and non-English turns dropped (Latin script + share of English marker words). | AmazonHelp answers in Japanese and German in some threads. The feature models are English. |
 | D-34 | The TypeScript scorer is generated from one template with the lexicons and weights injected from Python. A parity test runs the generated file under Node and requires every feature within 1e-9 and the score within 1e-6. A mutation check confirmed the test fails on a 0.001 drift. | Kiki's scorer must be the model that was evaluated, not a re-implementation that drifted. |
+| D-35 | Blind verification judges up to 8 rules per call on **one shared, shuffled held-out sample**. Fidelity generates and judges 10 items per call. | Every rule is judged on the same messages, so rules are comparable. Calls drop about 8×: 40 fidelity items cost 12 calls, not 120. Found when the Gemini free tier (20 requests per model per day) ran out mid-run. |
+| D-36 | The LLM layer honours the server's retry delay, learns per-minute quotas from 429s (a shared per-model pacer), and treats a daily-quota 429 as unavailable at once so the router fails over instead of sleeping. | Measured: blind exponential backoff (up to 24 s) never outlasted a 32 s server `retryDelay`. |
+| D-37 | **No local model silently stands in for a frontier stage.** `llm.fallback_providers` defaults to anthropic → openai → gemini; Ollama is used only when a stage names it. | The owner's rule: the architecture uses local models where they are best (NER, classifiers, NLI, embeddings), and never swaps a 7B model in for rule induction or judging. |
+| D-38 | The `session` provider: each frontier call is written to `.voiceprint/session/requests/`, and a frontier model driving a Claude Code session answers it in `responses/`. Prompts, schemas, validation and cache are unchanged, and the manifest records `session/claude-opus-5.5`. The router refuses it for private corpora. | Used for every published test run because no Anthropic key was configured and the Gemini free tier was exhausted. Same model family as the default, no API spend. A chat session is not a zero-retention path, hence public and synthetic data only. |
+| D-39 | Distinctiveness decides whether a rule is kept; the held-out rate decides its strength. An overstated but distinctive rule is recalibrated (for example "usually" → "often", recording `strength_claimed`), not discarded. | Planted eval: "end on 🙂" (58% vs 0% held-out) was dropped on a 2-point shortfall against the "usually" floor. |
+| D-40 | Feature extraction checkpoints each stage and each 512-turn block of the model stages, and resumes from them. | A session restart killed an hour of NLI on 3,200 book passages. |
+| D-41 | The judge's labels for mechanically checkable rules were produced by stating each rule's reading as an explicit criterion and applying it to every message. Tone rules used an explicit list of warmth markers. | 384 labels per call are too many to hand-copy reliably, and an explicit criterion is auditable. Recorded so the method is transparent. |
 
 ## 4. Files
 
@@ -202,3 +209,23 @@ it must be when there is nothing to find.
 - Kiki `@kiki/voice`: `fromVoiceprint({ tonePack, voiceJson })` → `{ provider, score, pickMostOnVoice }`.
   `scoreOnVoice` is now real. Vitest 2/2, strict `tsc` clean, tsup build OK.
 - Strict TS caught a readonly cast in the template. Fixed at the template, not in the generated file.
+
+### 2026-09-25: LLM path on the planted corpus (frontier stages answered in session)
+
+Gemini first. The free tier failed three ways in sequence: 503 overload, then `max_output_tokens`
+consumed by thinking (D-31), then 20 requests per model per day (D-35, D-36). Per the owner's
+instruction, test runs moved to the session provider (D-38) with no local substitute (D-37).
+
+| run | statistical recall | LLM recall (verified) | null false discoveries | notes |
+|---|---|---|---|---|
+| session, before D-39 | 6/6 | 5/6 | 0 statistical, 0 LLM | emoji rule distinctive (58% vs 0%) but dropped for missing "usually" by 2 points |
+| **session, D-39** | **6/6** | **6/6** | **0 / 0** | emoji rule kept, recalibrated to "often"; plus one true extra habit ("you're free to", 21% vs 0%) |
+
+On the null corpus the inducer proposed 5 plausible rules ("use full forms", "no emoji", "skip
+greetings" …). Blind verification rejected all 5: each was true of the target (95–100%) and
+equally true of the reference (88–100%). This is the failure mode D-02 exists to catch.
+
+Verified LLM rules on the planted run, held-out compliance target vs reference: name opening
+92% vs 0%; lowercase 75% vs 0%; contractions 100% vs 13%; 'i think' 63% vs 0%;
+'anything else you need?' 54% vs 0%; 🙂 ending 58% vs 0%; warm tone 92% vs 33%. Dropped: "one or
+two short clauses" (100% vs 100%, not distinctive).
