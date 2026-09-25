@@ -6,3 +6,5 @@ data/
 results/*/run/dpo.jsonl
 results/*/run/sft.jsonl
 scratch/
+results/voice_*/prompt_pack/full.txt
+results/voice_*/exemplars.jsonl

@@ -1,0 +1,136 @@
+{
+  "summary": {
+    "planted": 6,
+    "recall_statistical": 1.0,
+    "statistical_rules_total": 18,
+    "recall_llm": null,
+    "null_false_discoveries": 0,
+    "null_rules": [],
+    "scorer_heldout_auc": 1.0,
+    "null_scorer_heldout_auc": 0.4508281573498965
+  },
+  "per_rule": {
+    "P4": {
+      "rule": "Uses contractions",
+      "true_presence": 0.808,
+      "measured": "contraction_rate",
+      "measured_target": 0.06287,
+      "measured_reference": 0.0,
+      "recovered_as": "contraction_rate"
+    },
+    "P5": {
+      "rule": "Hedges with 'I think'",
+      "true_presence": 0.567,
+      "measured": "hedge_rate",
+      "measured_target": 0.03451,
+      "measured_reference": 0.0,
+      "recovered_as": "hedge_rate"
+    },
+    "P1": {
+      "rule": "Opens by addressing the reader by name",
+      "true_presence": 0.85,
+      "measured": "opens_with_name",
+      "measured_target": 0.83158,
+      "measured_reference": 0.0,
+      "recovered_as": "opens_with_name"
+    },
+    "P6": {
+      "rule": "Ends with a question offering more help",
+      "true_presence": 0.483,
+      "measured": "ends_with_question",
+      "measured_target": 0.46316,
+      "measured_reference": 0.0,
+      "recovered_as": "ends_with_question"
+    },
+    "P2": {
+      "rule": "Ends with an emoji",
+      "true_presence": 0.733,
+      "measured": "emoji_end",
+      "measured_target": 0.77895,
+      "measured_reference": 0.0,
+      "recovered_as": "emoji_end"
+    },
+    "P3": {
+      "rule": "Writes in lowercase",
+      "true_presence": 0.775,
+      "measured": "all_lowercase",
+      "measured_target": 0.85263,
+      "measured_reference": 0.0,
+      "recovered_as": "all_lowercase"
+    }
+  },
+  "statistical_rules": [
+    [
+      "all_lowercase",
+      "Write in all lowercase"
+    ],
+    [
+      "opens_with_name",
+      "Open by addressing the reader by name"
+    ],
+    [
+      "emoji_end",
+      "Put emoji at the end of the message"
+    ],
+    [
+      "contraction_rate",
+      "Use contractions (I'm, we'll, don't)"
+    ],
+    [
+      "hedge_rate",
+      "Soften claims with hedges (maybe, I think)"
+    ],
+    [
+      "exclamations_per_sentence",
+      "Use exclamation marks freely"
+    ],
+    [
+      "words",
+      "Write longer messages than typical"
+    ],
+    [
+      "ends_with_question",
+      "End messages with a question"
+    ],
+    [
+      "emotion_neutral",
+      "Let feeling show rather than staying neutral"
+    ],
+    [
+      "formality_fscore",
+      "Write informally (verb- and pronoun-heavy)"
+    ],
+    [
+      "asks_back",
+      "Answer a question with a question back"
+    ],
+    [
+      "length_ratio",
+      "Reply at greater length than the message received"
+    ],
+    [
+      "sentiment_score",
+      "Keep the tone warm and positive"
+    ],
+    [
+      "social_offer",
+      "Offer further help"
+    ],
+    [
+      "lsm",
+      "Keep your own style regardless of the other person"
+    ],
+    [
+      "words_per_sentence",
+      "Use longer sentences"
+    ],
+    [
+      "act_answer",
+      "Respond with more than a bare answer"
+    ],
+    [
+      "emotion_approval",
+      "Rarely express approval"
+    ]
+  ]
+}

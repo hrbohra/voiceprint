@@ -1,0 +1,33 @@
+{
+  "summary": {
+    "speakers": 8,
+    "test_turns": 965,
+    "chance": 0.125,
+    "majority": 0.134,
+    "surface": {
+      "per_turn": 0.331,
+      "per_10_turns": 0.761,
+      "chunks": 92
+    },
+    "full": {
+      "per_turn": 0.468,
+      "per_10_turns": 0.924,
+      "chunks": 92
+    },
+    "style": {
+      "per_turn": 0.309,
+      "per_10_turns": 0.641,
+      "chunks": 92
+    }
+  },
+  "speakers": [
+    "dickens",
+    "austen",
+    "bronte_c",
+    "hardy",
+    "twain",
+    "doyle",
+    "wells",
+    "wilde"
+  ]
+}

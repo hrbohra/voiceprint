@@ -1,0 +1,61 @@
+{
+  "summary": [
+    {
+      "turns": 25,
+      "effect_rank_spearman": 0.921,
+      "rule_jaccard_vs_full": 0.231,
+      "heldout_auc": 0.861,
+      "rules": 9
+    },
+    {
+      "turns": 50,
+      "effect_rank_spearman": 0.935,
+      "rule_jaccard_vs_full": 0.364,
+      "heldout_auc": 0.875,
+      "rules": 8
+    },
+    {
+      "turns": 100,
+      "effect_rank_spearman": 0.951,
+      "rule_jaccard_vs_full": 0.636,
+      "heldout_auc": 0.872,
+      "rules": 11
+    },
+    {
+      "turns": 200,
+      "effect_rank_spearman": 0.962,
+      "rule_jaccard_vs_full": 0.7,
+      "heldout_auc": 0.891,
+      "rules": 10
+    },
+    {
+      "turns": 400,
+      "effect_rank_spearman": 0.976,
+      "rule_jaccard_vs_full": 1.0,
+      "heldout_auc": 0.892,
+      "rules": 7
+    },
+    {
+      "turns": 800,
+      "effect_rank_spearman": 0.985,
+      "rule_jaccard_vs_full": 1.0,
+      "heldout_auc": 0.901,
+      "rules": 7
+    },
+    {
+      "turns": 1600,
+      "effect_rank_spearman": 0.997,
+      "rule_jaccard_vs_full": 1.0,
+      "heldout_auc": 0.903,
+      "rules": 7
+    },
+    {
+      "turns": 1665,
+      "effect_rank_spearman": 1.0,
+      "rule_jaccard_vs_full": 1.0,
+      "heldout_auc": 0.903,
+      "rules": 7
+    }
+  ],
+  "speaker": "AmazonHelp"
+}

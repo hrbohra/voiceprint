@@ -1,0 +1,35 @@
+{
+  "summary": {
+    "speakers": 10,
+    "test_turns": 1186,
+    "chance": 0.1,
+    "majority": 0.101,
+    "surface": {
+      "per_turn": 0.642,
+      "per_10_turns": 0.948,
+      "chunks": 115
+    },
+    "full": {
+      "per_turn": 0.77,
+      "per_10_turns": 1.0,
+      "chunks": 115
+    },
+    "style": {
+      "per_turn": 0.611,
+      "per_10_turns": 0.93,
+      "chunks": 115
+    }
+  },
+  "speakers": [
+    "customer",
+    "AmazonHelp",
+    "AppleSupport",
+    "Uber_Support",
+    "Delta",
+    "SpotifyCares",
+    "AmericanAir",
+    "British_Airways",
+    "comcastcares",
+    "XboxSupport"
+  ]
+}
