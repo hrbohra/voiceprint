@@ -9,11 +9,11 @@ Corpus: null · 117 target turns · 235 reference turns · tier `local-first`
 
 <details><summary>5 candidate rules failed verification</summary>
 
-- Use full, uncontracted forms (it is, you are, there is, I will). ({'target_compliance': 1.0, 'reference_compliance': 1.0, 'n_target': 21, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
-- Answer in one plain declarative sentence with standard capitalisation and a full stop. ({'target_compliance': 0.952, 'reference_compliance': 0.875, 'n_target': 21, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
-- Skip greetings and sign-offs; start with the answer. ({'target_compliance': 1.0, 'reference_compliance': 1.0, 'n_target': 21, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
-- Grant permission with 'you are free to' or 'you are welcome to'. ({'target_compliance': 0.143, 'reference_compliance': 0.083, 'n_target': 21, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
-- Do not use emoji. ({'target_compliance': 1.0, 'reference_compliance': 1.0, 'n_target': 21, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
+- Use full, uncontracted forms (it is, you are, there is, I will). ({'target_compliance': 1.0, 'reference_compliance': 1.0, 'n_target': 21, 'n_reference': 46, 'fisher_p': 1.0, 'judge': 'session/claude-opus-5.5'})
+- Answer in one plain declarative sentence with standard capitalisation and a full stop. ({'target_compliance': 0.952, 'reference_compliance': 0.87, 'n_target': 21, 'n_reference': 46, 'fisher_p': 0.2877, 'judge': 'session/claude-opus-5.5'})
+- Skip greetings and sign-offs; start with the answer. ({'target_compliance': 1.0, 'reference_compliance': 1.0, 'n_target': 21, 'n_reference': 46, 'fisher_p': 1.0, 'judge': 'session/claude-opus-5.5'})
+- Grant permission with 'you are free to' or 'you are welcome to'. ({'target_compliance': 0.143, 'reference_compliance': 0.065, 'n_target': 21, 'n_reference': 46, 'fisher_p': 0.2743, 'judge': 'session/claude-opus-5.5'})
+- Do not use emoji. ({'target_compliance': 1.0, 'reference_compliance': 1.0, 'n_target': 21, 'n_reference': 46, 'fisher_p': 1.0, 'judge': 'session/claude-opus-5.5'})
 
 </details>
 

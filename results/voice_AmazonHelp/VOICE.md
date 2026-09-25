@@ -6,12 +6,12 @@ Corpus: twcs · 2000 target turns · 106365 reference turns · tier `local-first
 
 | # | Rule | When | Strength | Evidence |
 |---|---|---|---|---|
-| R01 | End every reply with a space, a caret and the agent's initials, e.g. ' ^JK'. | always | usually | held-out: 100% vs ref 12% |
-| R02 | When something has gone wrong, open with an apology for the specific problem ('I'm sorry about the delay', 'Sorry for the trouble', 'My apologies') before anything else. | always | sometimes | held-out: 21% vs ref 0% |
-| R03 | Move the issue to a private channel with a link: 'Please share your details / reach us here: <URL> and we'll look into it.' | always | sometimes | held-out: 33% vs ref 12% |
-| R06 | Speak as 'we' and promise follow-up ('We'll look into this and get back to you shortly'). | always | sometimes | held-out: 29% vs ref 12% |
-| R07 | Skip casual greetings ('Hi', 'Hey'); begin with the apology or the answer. | always | usually | held-out: 92% vs ref 75% |
-| R09 | Use formal service formulae: 'Kindly', 'correspondence', 'revert', 'the same', 'Please be assured'. | always | sometimes | held-out: 17% vs ref 0% |
+| R01 | End every reply with a space, a caret and the agent's initials, e.g. ' ^JK'. | always | usually | held-out: 100% vs ref 17% |
+| R02 | When something has gone wrong, open with an apology for the specific problem ('I'm sorry about the delay', 'Sorry for the trouble', 'My apologies') before anything else. | always | sometimes | held-out: 25% vs ref 4% |
+| R03 | Move the issue to a private channel with a link: 'Please share your details / reach us here: <URL> and we'll look into it.' | always | often | held-out: 35% vs ref 8% |
+| R06 | Speak as 'we' and promise follow-up ('We'll look into this and get back to you shortly'). | always | sometimes | held-out: 25% vs ref 6% |
+| R07 | Skip casual greetings ('Hi', 'Hey'); begin with the apology or the answer. | always | usually | held-out: 92% vs ref 73% |
+| R09 | Use formal service formulae: 'Kindly', 'correspondence', 'revert', 'the same', 'Please be assured'. | always | sometimes | held-out: 12% vs ref 0% |
 | S01 | Keep the tone sober and concerned rather than upbeat | always | often | target -0.0955 (95% CI -0.118–-0.0687) vs reference 0.268; Hedges g -0.74, Cliff's δ -0.41 |
 | S02 | Apologise readily | always | sometimes | target 0.357 (95% CI 0.336–0.386) vs reference 0.133; Hedges g 0.59, Cliff's δ 0.22; also measured by emotion_remorse |
 | S03 | Skip greetings | always | usually | target 0.0727 (95% CI 0.0594–0.0856) vs reference 0.259; Hedges g -0.47, Cliff's δ -0.18 |
@@ -19,15 +19,15 @@ Corpus: twcs · 2000 target turns · 106365 reference turns · tier `local-first
 
 <details><summary>9 candidate rules failed verification</summary>
 
-- Warn the customer not to post order or account details because the Twitter page is public. ({'target_compliance': 0.083, 'reference_compliance': 0.0, 'n_target': 24, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
-- State that accounts cannot be accessed over Twitter before redirecting. ({'target_compliance': 0.042, 'reference_compliance': 0.0, 'n_target': 24, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
-- Put the customer's first name after a comma inside the apology, not as the first word. ({'target_compliance': 0.042, 'reference_compliance': 0.0, 'n_target': 24, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
-- For a late or missing package, ask what the tracking shows, who the carrier is, or whether the promised delivery date has passed. ({'target_compliance': 0.083, 'reference_compliance': 0.0, 'n_target': 24, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
-- Ask the customer to describe the problem without sharing personal or account information. ({'target_compliance': 0.0, 'reference_compliance': 0.0, 'n_target': 24, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
-- Acknowledge feelings with 'I understand your concern' or 'I understand your frustration'. ({'target_compliance': 0.083, 'reference_compliance': 0.0, 'n_target': 24, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
-- Close with a courtesy line such as 'Appreciate your patience' or 'Keep us posted!' ({'target_compliance': 0.042, 'reference_compliance': 0.0, 'n_target': 24, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
-- If a reply runs long, split it across tweets numbered '(1/2)', '(2/2)'. ({'target_compliance': 0.167, 'reference_compliance': 0.042, 'n_target': 24, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
-- Say that feedback has been forwarded internally or to the concerned team when the customer complains. ({'target_compliance': 0.0, 'reference_compliance': 0.0, 'n_target': 24, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
+- Warn the customer not to post order or account details because the Twitter page is public. ({'target_compliance': 0.042, 'reference_compliance': 0.0, 'n_target': 48, 'n_reference': 48, 'fisher_p': 0.2474, 'judge': 'session/claude-opus-5.5'})
+- State that accounts cannot be accessed over Twitter before redirecting. ({'target_compliance': 0.021, 'reference_compliance': 0.0, 'n_target': 48, 'n_reference': 48, 'fisher_p': 0.5, 'judge': 'session/claude-opus-5.5'})
+- Put the customer's first name after a comma inside the apology, not as the first word. ({'target_compliance': 0.062, 'reference_compliance': 0.0, 'n_target': 48, 'n_reference': 48, 'fisher_p': 0.1211, 'judge': 'session/claude-opus-5.5'})
+- For a late or missing package, ask what the tracking shows, who the carrier is, or whether the promised delivery date has passed. ({'target_compliance': 0.062, 'reference_compliance': 0.0, 'n_target': 48, 'n_reference': 48, 'fisher_p': 0.1211, 'judge': 'session/claude-opus-5.5'})
+- Ask the customer to describe the problem without sharing personal or account information. ({'target_compliance': 0.021, 'reference_compliance': 0.0, 'n_target': 48, 'n_reference': 48, 'fisher_p': 0.5, 'judge': 'session/claude-opus-5.5'})
+- Acknowledge feelings with 'I understand your concern' or 'I understand your frustration'. ({'target_compliance': 0.062, 'reference_compliance': 0.0, 'n_target': 48, 'n_reference': 48, 'fisher_p': 0.1211, 'judge': 'session/claude-opus-5.5'})
+- Close with a courtesy line such as 'Appreciate your patience' or 'Keep us posted!' ({'target_compliance': 0.042, 'reference_compliance': 0.021, 'n_target': 48, 'n_reference': 48, 'fisher_p': 0.5, 'judge': 'session/claude-opus-5.5'})
+- If a reply runs long, split it across tweets numbered '(1/2)', '(2/2)'. ({'target_compliance': 0.125, 'reference_compliance': 0.042, 'n_target': 48, 'n_reference': 48, 'fisher_p': 0.9705, 'judge': 'session/claude-opus-5.5'})
+- Say that feedback has been forwarded internally or to the concerned team when the customer complains. ({'target_compliance': 0.0, 'reference_compliance': 0.0, 'n_target': 48, 'n_reference': 48, 'fisher_p': 1.0, 'judge': 'session/claude-opus-5.5'})
 
 </details>
 

@@ -23,9 +23,10 @@
       "source": "merged",
       "verification": {
         "target_compliance": 1.0,
-        "reference_compliance": 0.125,
-        "n_target": 24,
-        "n_reference": 24,
+        "reference_compliance": 0.167,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.0,
         "judge": "session/claude-opus-5.5"
       },
       "kept": true
@@ -42,10 +43,11 @@
       "feature": "social_apologise",
       "source": "merged",
       "verification": {
-        "target_compliance": 0.208,
-        "reference_compliance": 0.0,
-        "n_target": 24,
-        "n_reference": 24,
+        "target_compliance": 0.25,
+        "reference_compliance": 0.042,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.0037,
         "judge": "session/claude-opus-5.5",
         "strength_claimed": "often"
       },
@@ -56,19 +58,19 @@
       "statement": "Move the issue to a private channel with a link: 'Please share your details / reach us here: <URL> and we'll look into it.'",
       "category": "dialogue",
       "situation": "always",
-      "strength": "sometimes",
+      "strength": "often",
       "rationale": "semicolons_colons 0.21 vs 0.08 ('here: <URL>'); 'your details', 'provide', 'here' over-used.",
       "example": "Please reach us by chat here: <URL> so we can check this for you. ^LS",
       "counter_example": "DM us your order number and we'll sort it.",
       "feature": "semicolons_colons",
       "source": "merged",
       "verification": {
-        "target_compliance": 0.333,
-        "reference_compliance": 0.125,
-        "n_target": 24,
-        "n_reference": 24,
-        "judge": "session/claude-opus-5.5",
-        "strength_claimed": "often"
+        "target_compliance": 0.354,
+        "reference_compliance": 0.083,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.0012,
+        "judge": "session/claude-opus-5.5"
       },
       "kept": true
     },
@@ -84,10 +86,11 @@
       "feature": "act_intent",
       "source": "merged",
       "verification": {
-        "target_compliance": 0.292,
-        "reference_compliance": 0.125,
-        "n_target": 24,
-        "n_reference": 24,
+        "target_compliance": 0.25,
+        "reference_compliance": 0.062,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.0111,
         "judge": "session/claude-opus-5.5",
         "strength_claimed": "often"
       },
@@ -106,9 +109,10 @@
       "source": "merged",
       "verification": {
         "target_compliance": 0.917,
-        "reference_compliance": 0.75,
-        "n_target": 24,
-        "n_reference": 24,
+        "reference_compliance": 0.729,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.0152,
         "judge": "session/claude-opus-5.5"
       },
       "kept": true
@@ -125,10 +129,11 @@
       "feature": null,
       "source": "merged",
       "verification": {
-        "target_compliance": 0.167,
+        "target_compliance": 0.125,
         "reference_compliance": 0.0,
-        "n_target": 24,
-        "n_reference": 24,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.0132,
         "judge": "session/claude-opus-5.5"
       },
       "kept": true
@@ -145,10 +150,11 @@
       "feature": null,
       "source": "merged",
       "verification": {
-        "target_compliance": 0.083,
+        "target_compliance": 0.042,
         "reference_compliance": 0.0,
-        "n_target": 24,
-        "n_reference": 24,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.2474,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -165,10 +171,11 @@
       "feature": "negation_rate",
       "source": "merged",
       "verification": {
-        "target_compliance": 0.042,
+        "target_compliance": 0.021,
         "reference_compliance": 0.0,
-        "n_target": 24,
-        "n_reference": 24,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.5,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -185,10 +192,11 @@
       "feature": "opens_with_name",
       "source": "merged",
       "verification": {
-        "target_compliance": 0.042,
+        "target_compliance": 0.062,
         "reference_compliance": 0.0,
-        "n_target": 24,
-        "n_reference": 24,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.1211,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -205,10 +213,11 @@
       "feature": "act_ask",
       "source": "merged",
       "verification": {
-        "target_compliance": 0.083,
+        "target_compliance": 0.062,
         "reference_compliance": 0.0,
-        "n_target": 24,
-        "n_reference": 24,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.1211,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -225,10 +234,11 @@
       "feature": null,
       "source": "merged",
       "verification": {
-        "target_compliance": 0.0,
+        "target_compliance": 0.021,
         "reference_compliance": 0.0,
-        "n_target": 24,
-        "n_reference": 24,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.5,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -245,10 +255,11 @@
       "feature": "social_empathise",
       "source": "merged",
       "verification": {
-        "target_compliance": 0.083,
+        "target_compliance": 0.062,
         "reference_compliance": 0.0,
-        "n_target": 24,
-        "n_reference": 24,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.1211,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -266,9 +277,10 @@
       "source": "merged",
       "verification": {
         "target_compliance": 0.042,
-        "reference_compliance": 0.0,
-        "n_target": 24,
-        "n_reference": 24,
+        "reference_compliance": 0.021,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.5,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -285,10 +297,11 @@
       "feature": null,
       "source": "merged",
       "verification": {
-        "target_compliance": 0.167,
+        "target_compliance": 0.125,
         "reference_compliance": 0.042,
-        "n_target": 24,
-        "n_reference": 24,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 0.9705,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -307,8 +320,9 @@
       "verification": {
         "target_compliance": 0.0,
         "reference_compliance": 0.0,
-        "n_target": 24,
-        "n_reference": 24,
+        "n_target": 48,
+        "n_reference": 48,
+        "fisher_p": 1.0,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -6090,14 +6104,14 @@
       "by_stage": {}
     },
     "timings_s": {
-      "features": 3.16,
-      "contrast": 71.28,
-      "situations": 33.31,
+      "features": 3.27,
+      "contrast": 75.27,
+      "situations": 64.92,
       "rules": 0.06,
-      "scorer": 18.97,
-      "exemplars": 37.6
+      "scorer": 21.04,
+      "exemplars": 40.64
     },
-    "total_s": 236.7,
+    "total_s": 289.0,
     "memorisation_leaks": 0,
     "memorisation_leak_spans": []
   }

@@ -1,0 +1,39 @@
+{
+  "summary": {
+    "n": 40,
+    "generator": "session/claude-opus-5.5",
+    "judge": "session/claude-opus-5.5",
+    "surface_score": {
+      "baseline": 0.04,
+      "voiced": 0.765,
+      "real": 0.734
+    },
+    "style_similarity": {
+      "baseline": 0.821,
+      "voiced": 0.956,
+      "real": 0.921
+    },
+    "judge_voiced_win_rate": 1.0,
+    "judged_pairs": 40,
+    "content_preserved_bidirectional": 0.3,
+    "content_entailed_voiced_from_baseline": 0.7,
+    "cost": {
+      "budget_gbp": 20.0,
+      "spent_gbp": 0.0,
+      "by_stage": {
+        "generate": {
+          "calls": 8,
+          "input_tokens": 4920,
+          "output_tokens": 4001,
+          "gbp": 0.0
+        },
+        "judge": {
+          "calls": 4,
+          "input_tokens": 5394,
+          "output_tokens": 68,
+          "gbp": 0.0
+        }
+      }
+    }
+  }
+}

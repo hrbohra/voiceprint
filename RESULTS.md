@@ -23,19 +23,20 @@ each with a fixed probability; four reference hosts answer the same questions in
 Measured presence against the truth: name opening 0.83 vs 0.85, emoji ending 0.78 vs 0.73,
 question ending 0.46 vs 0.48, lowercase 0.85 vs 0.78.
 
-LLM rules after blind held-out verification (target vs reference compliance):
+LLM rules after blind held-out verification (25 target and 25+ reference held-out turns,
+one-sided Fisher exact test):
 
-| rule (as induced) | target | reference | kept |
-|---|---|---|---|
-| Open by addressing the guest by first name followed by "!" | 92% | 0% | ✓ |
-| Write in lowercase, capitalising only the guest's name | 75% | 0% | ✓ |
-| Use contractions wherever possible | 100% | 13% | ✓ |
-| Soften the answer with "i think" | 63% | 0% | ✓ |
-| Offer more help with "anything else you need?" | 54% | 0% | ✓ |
-| End on a single 🙂 (claimed "usually", recalibrated to "often") | 58% | 0% | ✓ |
-| Grant permission with "you're free to / welcome to" | 21% | 0% | ✓ |
-| Keep the tone warm and upbeat | 92% | 33% | ✓ |
-| Answer in one or two short clauses | 100% | 100% | ✗ not distinctive |
+| rule (as induced) | target | reference | p | kept |
+|---|---|---|---|---|
+| Open by addressing the guest by first name followed by "!" | 92% | 0% | < 0.001 | ✓ |
+| Write in lowercase, capitalising only the guest's name | 76% | 0% | < 0.001 | ✓ |
+| Use contractions wherever possible | 100% | 20% | < 0.001 | ✓ |
+| Soften the answer with "i think" | 64% | 0% | < 0.001 | ✓ |
+| Offer more help with "anything else you need?" | 56% | 0% | < 0.001 | ✓ |
+| End on a single 🙂 (claimed "usually", recalibrated to "often") | 56% | 0% | < 0.001 | ✓ |
+| Grant permission with "you're free to / welcome to" | 20% | 0% | 0.004 | ✓ |
+| Keep the tone warm and upbeat | 92% | 37% | < 0.001 | ✓ |
+| Answer in one or two short clauses | 100% | 100% | 1.0 | ✗ not distinctive |
 
 On the null corpus the inducer proposed "use full forms", "no emoji", "skip greetings" and two
 more. All were true of the target and equally true of the reference, and all were rejected.
@@ -52,7 +53,7 @@ TypeScript scorer sees), the **full** feature set, and the **style** embedding a
 
 | corpus | writers | chance | surface: 1 text / 10 texts | full: 1 / 10 | style embedding: 1 / 10 |
 |---|---|---|---|---|---|
-| Customer Support on Twitter (brand replies) | 10 brands | 10% | 64% / 95% | **77% / 100%** | 61% / 93% |
+| Customer Support on Twitter (brand replies) | 10 brands | 10% | *re-running* | *re-running* | *re-running* |
 | Project Gutenberg novels (narration) | 8 authors | 12.5% | 33% / 76% | **47% / 92%** | 31% / 64% |
 
 The full feature set beats the purpose-built style embedding on both corpora, and the cheap
@@ -92,56 +93,58 @@ certainty about the rules.
 
 ## 4. A full extraction: AmazonHelp
 
-`python scripts/public_evals.py extract` → [`results/voice_AmazonHelp/`](results/voice_AmazonHelp/) (`VOICE.md`, `voice.json`, prompt pack, scorer)
+`python scripts/public_evals.py extract` → [`results/voice_AmazonHelp/`](results/voice_AmazonHelp/) (`VOICE.md`, `voice.json`, prompt packs, scorer)
 
 2,000 AmazonHelp turns (sampled by conversation; 376 held out) against 9 other brands. The
 frontier stages were induction over 6 chunks of 60 turns, one merge, and blind verification on
-24 + 24 held-out turns. Verification kept 10 of 15 merged LLM rules, plus 4 statistical rules.
-Scorer held-out AUC: 0.84 (portable surface model), 0.89 (with style embedding). The
-memorisation check found no leaks.
+48 + 48 held-out turns with a one-sided Fisher exact test (p < 0.05, plus a 5-point floor).
+Verification kept 6 of 15 merged LLM rules, plus 4 statistical rules. Scorer held-out AUC:
+0.84 (portable surface model), 0.89 (with style embedding). The memorisation check found no leaks.
 
-| verified rule | AmazonHelp | other brands |
-|---|---|---|
-| End with " ^" + agent initials | 100% | 13% |
-| Skip "Hi/Hey"; begin with the apology or answer | 92% | 75% |
-| Move the issue to a private channel via a link | 33% | 13% |
-| Speak as "we" and promise follow-up | 29% | 13% |
-| Open with an apology for the specific problem | 21% | 0% |
-| Formal service formulae ("Kindly", "revert", "correspondence") | 17% | 0% |
+| verified rule | AmazonHelp | other brands | Fisher p |
+|---|---|---|---|
+| End with " ^" + agent initials | 100% | 17% | < 0.001 |
+| Move the issue to a private channel via a link | 35% | 8% | 0.001 |
+| Open with an apology for the specific problem | 25% | 4% | 0.004 |
+| Speak as "we" and promise follow-up | 25% | 6% | 0.011 |
+| Formal service formulae ("Kindly", "revert", "correspondence") | 13% | 0% | 0.013 |
+| Skip "Hi/Hey"; begin with the apology or the answer | 92% | 73% | 0.015 |
 
-Rejected though true: the privacy warning (8% vs 0%), "I understand your concern" (8% vs 0%),
-and tracking/carrier questions (8% vs 0%). This is a **power limit**, not a false rule. With 24
-judged turns per side, a habit in under about 1 message in 6 cannot clear the 15-point margin.
-Next step: a larger judged sample and an exact test (Fisher) in place of a fixed margin.
+Rejected though plausibly true: the privacy warning (4% vs 0%), "I understand your concern" (6%
+vs 0%), and tracking/carrier questions (6% vs 0%, p = 0.12). This is a **power limit**: at 48
+judged turns per side, a habit needs roughly 10% vs 0% to reach significance. The exact test
+states the uncertainty honestly instead of hiding it behind a fixed margin. More judged turns
+would recover these habits.
 
 ## 5. Does an LLM given the pack write in the voice, and say the same thing?
 
 `python scripts/public_evals.py fidelity` (40 held-out AmazonHelp conversations, none shown to the model as exemplars)
 
 The same generator replies twice to each incoming tweet: **baseline** ("reply helpfully and
-naturally") and **voiced** (the standard prompt pack).
+naturally") and **voiced** (the standard prompt pack with its exemplars).
 
 | | baseline | voiced | real AmazonHelp reply |
 |---|---|---|---|
-| voice scorer (portable, model-free) | 0.04 | **0.77** | 0.68 |
-| style-embedding similarity (StyleDistance) | 0.83 | **0.94** | 0.93 |
-| content preserved (NLI entailment both ways) | | 25% | |
-| voiced reply entailed by baseline | | 50% | |
+| voice scorer (portable, model-free) | 0.04 | **0.77** | 0.73 |
+| style-embedding similarity (StyleDistance) | 0.82 | **0.96** | 0.92 |
+| voiced reply entailed by the baseline (NLI) | | 70% | |
+| content preserved in both directions (NLI) | | 30% | |
 
-The pack moves generation to the measured voice: level with the real replies on style similarity,
-and slightly past them on the scorer (the pack applies the habits more consistently than people
-do). The pairwise style judge preferred the voiced reply in 40/40 pairs. The judge was the same
-session model that wrote both replies, applying an explicit marker-count criterion, so this is
-**not an independent judgement** and is reported only for completeness.
+The pack moves generation onto the measured voice, level with or slightly past the real replies:
+the pack applies the habits more consistently than people do. The pairwise style judge preferred
+the voiced reply in 40/40 pairs. That judge was the same session model that wrote both replies,
+applying an explicit marker-count criterion, so it is **not an independent judgement** and is
+reported only for completeness.
 
-Content preservation is the weak spot, and the reason is instructive. Some verified rules
-**carry content**: "move the issue to a private channel via a link" and "promise follow-up"
-change *what* is said, not only *how*. For a product like Kiki, where the content must come
-only from facts, those rules must be separated out. Next step: tag each rule as style-only or
-content-bearing (a rule is content-bearing when applying it changes NLI entailment against the
-unvoiced reply), and build facts-only packs from style-only rules.
+Content preservation is the weak spot, and the reason is instructive. 70% of voiced replies say
+nothing the baseline doesn't, but only 30% are equivalent both ways, because some verified rules
+**carry content**. "Move the issue to a private channel via a link" and "promise follow-up" add
+*what* is said, not only *how*. For a product like Kiki, where content must come only from
+facts, those rules must be separated out. Next step: tag each rule as style-only or
+content-bearing (content-bearing when applying it changes NLI entailment against the unvoiced
+reply), and build facts-only packs from style-only rules.
 
-Frontier stages (generation and judging) in this section were answered by Claude Opus 5.5 in a
-Claude Code session through the `session` provider.
+Frontier stages (induction, merge, judging, generation) in sections 1, 4 and 5 were answered by
+Claude Opus 5.5 in a Claude Code session through the `session` provider.
 
 <!-- section 6 (signature ablation) is filled in when it completes -->

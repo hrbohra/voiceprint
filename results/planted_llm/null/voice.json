@@ -25,7 +25,8 @@
         "target_compliance": 1.0,
         "reference_compliance": 1.0,
         "n_target": 21,
-        "n_reference": 24,
+        "n_reference": 46,
+        "fisher_p": 1.0,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -43,9 +44,10 @@
       "source": "merged",
       "verification": {
         "target_compliance": 0.952,
-        "reference_compliance": 0.875,
+        "reference_compliance": 0.87,
         "n_target": 21,
-        "n_reference": 24,
+        "n_reference": 46,
+        "fisher_p": 0.2877,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -65,7 +67,8 @@
         "target_compliance": 1.0,
         "reference_compliance": 1.0,
         "n_target": 21,
-        "n_reference": 24,
+        "n_reference": 46,
+        "fisher_p": 1.0,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -83,9 +86,10 @@
       "source": "merged",
       "verification": {
         "target_compliance": 0.143,
-        "reference_compliance": 0.083,
+        "reference_compliance": 0.065,
         "n_target": 21,
-        "n_reference": 24,
+        "n_reference": 46,
+        "fisher_p": 0.2743,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -105,7 +109,8 @@
         "target_compliance": 1.0,
         "reference_compliance": 1.0,
         "n_target": 21,
-        "n_reference": 24,
+        "n_reference": 46,
+        "fisher_p": 1.0,
         "judge": "session/claude-opus-5.5"
       },
       "kept": false
@@ -5377,29 +5382,24 @@
       "budget_gbp": 20.0,
       "spent_gbp": 0.0,
       "by_stage": {
-        "induce": {
-          "calls": 2,
-          "input_tokens": 5954,
-          "output_tokens": 821,
-          "gbp": 0.0
-        },
-        "merge": {
+        "judge": {
           "calls": 1,
-          "input_tokens": 1739,
-          "output_tokens": 518,
+          "input_tokens": 1383,
+          "output_tokens": 635,
           "gbp": 0.0
         }
       }
     },
     "timings_s": {
       "features": 0.03,
-      "contrast": 6.81,
-      "situations": 12.34,
-      "rules": 52.86,
-      "scorer": 9.28,
-      "exemplars": 17.06
+      "contrast": 21.57,
+      "situations": 72.56,
+      "rules": 40.49,
+      "scorer": 46.46,
+      "exemplars": 48.84
     },
-    "total_s": 99.1,
-    "memorisation_leaks": 0
+    "total_s": 241.8,
+    "memorisation_leaks": 0,
+    "memorisation_leak_spans": []
   }
 }

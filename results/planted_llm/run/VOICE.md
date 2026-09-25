@@ -7,35 +7,35 @@ Corpus: planted · 120 target turns · 231 reference turns · tier `local-first`
 | # | Rule | When | Strength | Evidence |
 |---|---|---|---|---|
 | R01 | Open by addressing the guest by first name followed by an exclamation mark. | always | usually | held-out: 92% vs ref 0% |
-| R02 | Write in lowercase, including sentence starts and 'i', capitalising only the guest's name. | always | usually | held-out: 75% vs ref 0% |
-| R03 | End on a single 🙂 after the last word, with no full stop before it. | always | often | held-out: 58% vs ref 0% |
-| R04 | Use contractions wherever possible (it's, there's, you're, i'll, that's). | always | usually | held-out: 100% vs ref 12% |
-| R05 | Soften the answer with 'i think' at the start of the main clause, even for plain facts. | always | often | held-out: 62% vs ref 0% |
-| R06 | After the answer, offer more help with the question 'anything else you need?'. | always | sometimes | held-out: 54% vs ref 0% |
-| R07 | Grant permission with 'you're free to' or 'you're welcome to'. | always | sometimes | held-out: 21% vs ref 0% |
-| R09 | Keep the tone warm and upbeat rather than neutral. | always | usually | held-out: 92% vs ref 33% |
+| R02 | Write in lowercase, including sentence starts and 'i', capitalising only the guest's name. | always | usually | held-out: 76% vs ref 0% |
+| R03 | End on a single 🙂 after the last word, with no full stop before it. | always | often | held-out: 56% vs ref 0% |
+| R04 | Use contractions wherever possible (it's, there's, you're, i'll, that's). | always | usually | held-out: 100% vs ref 20% |
+| R05 | Soften the answer with 'i think' at the start of the main clause, even for plain facts. | always | often | held-out: 64% vs ref 0% |
+| R06 | After the answer, offer more help with the question 'anything else you need?'. | always | sometimes | held-out: 56% vs ref 0% |
+| R07 | Grant permission with 'you're free to' or 'you're welcome to'. | always | sometimes | held-out: 20% vs ref 0% |
+| R09 | Keep the tone warm and upbeat rather than neutral. | always | usually | held-out: 92% vs ref 37% |
 | S01 | Write in all lowercase | always | usually | target 0.853 (95% CI 0.788–0.914) vs reference 0; Hedges g 4.10, Cliff's δ 0.85; also measured by sentences |
 | S02 | Open by addressing the reader by name | always | usually | target 0.832 (95% CI 0.732–0.907) vs reference 0; Hedges g 3.79, Cliff's δ 0.83 |
 | S03 | Put emoji at the end of the message | always | usually | target 0.779 (95% CI 0.691–0.861) vs reference 0; Hedges g 3.20, Cliff's δ 0.78; also measured by has_emoji, emoji_count |
 | S04 | Use contractions (I'm, we'll, don't) | always | usually | target 0.0629 (95% CI 0.0555–0.07) vs reference 0; Hedges g 2.94, Cliff's δ 0.82 |
-| S05 | Soften claims with hedges (maybe, I think) | always | often | target 0.0345 (95% CI 0.0278–0.0418) vs reference 0; Hedges g 1.82, Cliff's δ 0.55 |
+| S05 | Soften claims with hedges (maybe, I think) | always | usually | target 0.0345 (95% CI 0.0278–0.0418) vs reference 0; Hedges g 1.82, Cliff's δ 0.55 |
 | S06 | Use exclamation marks freely | always | usually | target 0.753 (95% CI 0.66–0.842) vs reference 0.184; Hedges g 1.45, Cliff's δ 0.62 |
 | S07 | Write longer messages than typical | always | usually | target 15.6 (95% CI 15.1–16.2) vs reference 12.4; Hedges g 1.41, Cliff's δ 0.65 |
 | S08 | End messages with a question | always | often | target 0.463 (95% CI 0.372–0.566) vs reference 0; Hedges g 1.58, Cliff's δ 0.46; also measured by emotion_curiosity, questions_per_sentence, act_ask |
-| S09 | Let feeling show rather than staying neutral | always | rarely | target 0.179 (95% CI 0.101–0.259) vs reference 0.762; Hedges g -1.41, Cliff's δ -0.58 |
+| S09 | Let feeling show rather than staying neutral | always | usually | target 0.179 (95% CI 0.101–0.259) vs reference 0.762; Hedges g -1.41, Cliff's δ -0.58 |
 | S10 | Write informally (verb- and pronoun-heavy) | always | usually | target 52.9 (95% CI 50.4–55.4) vs reference 63.3; Hedges g -0.99, Cliff's δ -0.57 |
 | S11 | Answer a question with a question back | always | sometimes | target 0.347 (95% CI 0.259–0.45) vs reference 0; Hedges g 1.24, Cliff's δ 0.35 |
-| S12 | Reply at greater length than the message received | always | usually | target 1.72 (95% CI 1.66–1.8) vs reference 1.39; Hedges g 0.95, Cliff's δ 0.47 |
-| S13 | Keep the tone warm and positive | always | usually | target 0.789 (95% CI 0.744–0.828) vs reference 0.522; Hedges g 0.90, Cliff's δ 0.46 |
+| S12 | Reply at greater length than the message received | always | often | target 1.72 (95% CI 1.66–1.8) vs reference 1.39; Hedges g 0.95, Cliff's δ 0.47 |
+| S13 | Keep the tone warm and positive | always | often | target 0.789 (95% CI 0.744–0.828) vs reference 0.522; Hedges g 0.90, Cliff's δ 0.46 |
 | S14 | Offer further help | always | sometimes | target 0.411 (95% CI 0.303–0.51) vs reference 0.0919; Hedges g 0.85, Cliff's δ 0.32 |
-| S15 | Keep your own style regardless of the other person | always | usually | target 0.5 (95% CI 0.472–0.535) vs reference 0.598; Hedges g -0.73, Cliff's δ -0.35 |
-| S16 | Use longer sentences | always | usually | target 14.1 (95% CI 13.3–14.9) vs reference 12.4; Hedges g 0.59, Cliff's δ 0.38 |
-| S17 | Respond with more than a bare answer | always | sometimes | target 0.4 (95% CI 0.315–0.5) vs reference 0.659; Hedges g -0.54, Cliff's δ -0.26; also measured by act_acknowledge |
-| S18 | Rarely express approval | always | sometimes | target 0.368 (95% CI 0.293–0.457) vs reference 0.589; Hedges g -0.45, Cliff's δ -0.22 |
+| S15 | Keep your own style regardless of the other person | always | often | target 0.5 (95% CI 0.472–0.535) vs reference 0.598; Hedges g -0.73, Cliff's δ -0.35 |
+| S16 | Use longer sentences | always | often | target 14.1 (95% CI 13.3–14.9) vs reference 12.4; Hedges g 0.59, Cliff's δ 0.38 |
+| S17 | Respond with more than a bare answer | always | often | target 0.4 (95% CI 0.315–0.5) vs reference 0.659; Hedges g -0.54, Cliff's δ -0.26; also measured by act_acknowledge |
+| S18 | Rarely express approval | always | often | target 0.368 (95% CI 0.293–0.457) vs reference 0.589; Hedges g -0.45, Cliff's δ -0.22 |
 
 <details><summary>3 candidate rules failed verification</summary>
 
-- Answer in one or two short clauses joined by 'and' or a comma, with no elaboration. ({'target_compliance': 1.0, 'reference_compliance': 1.0, 'n_target': 24, 'n_reference': 24, 'judge': 'session/claude-opus-5.5'})
+- Answer in one or two short clauses joined by 'and' or a comma, with no elaboration. ({'target_compliance': 1.0, 'reference_compliance': 1.0, 'n_target': 25, 'n_reference': 46, 'fisher_p': 1.0, 'judge': 'session/claude-opus-5.5'})
 - Greet the other person ({'statistical': True, 'hedges_g': 0.517, 'cliffs_delta': 0.084, 'heldout_target_mean': 0.0, 'heldout_reference_mean': 0.0})
 - Use the passive voice ({'statistical': True, 'hedges_g': 0.437, 'cliffs_delta': 0.074, 'heldout_target_mean': 0.0, 'heldout_reference_mean': 0.0})
 
