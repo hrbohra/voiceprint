@@ -130,6 +130,9 @@ flowchart LR
 | D-48 | Verification keeps a rule when target and reference differ in its direction by at least 5 points **and** a one-sided Fisher exact test gives p < 0.05. Default judged sample: 48 per side. Every rule records its p-value. | A fixed 15-point margin rejected real but infrequent habits and would have accepted a 15-point fluke at small n. The exact test scales with the sample and states the uncertainty. Re-run: planted 6/6 and null 0 unchanged; AmazonHelp keeps the same 6 rules, now with p-values. |
 | D-49 | Attribution excludes pooled pseudo-speakers (`customer`, `unknown`). | The first tweet attribution run compared 9 brands **plus all customers pooled**. Telling a brand from "everyone else" is not authorship attribution, and it inflated the published numbers. Found while reading the ablation output; both tweet runs are being redone. |
 | D-50 | Exemplars must stand alone (6+ words, no thread continuation like "2/2", not starting mid-sentence) and are deduplicated after normalisation. | Fragments ("emails sent by us here: <URL> 2/2") and verbatim duplicates of templated replies were being shown as few-shot examples. With clean exemplars, fidelity one-way entailment rose from 50% to 70%. |
+| D-51 | Low-power mode (`VOICEPRINT_LOW_POWER=1`): idle CPU priority (typed Win32 call, since an untyped `ctypes` call failed silently), 4 CPU threads, GPU batch 32, a rest after each GPU batch, including spaCy. | A full-speed run made the laptop unusable (Chrome and VS Code lagging) and pushed the GPU to 97 °C. |
+| D-52 | **Owner decision: the Kiki reference is public data from comparable brands** (hospitality, travel and community accounts). Members' messages are reply context only. | "Brand vs its own customers" measures company-vs-customer, not voice (compare D-49). |
+| D-53 | Thermal guard: the GPU temperature is read every 15 s; above `hot_c` rest longer, above `pause_c` pause 20 s. Thresholds and rest are live-tunable in `.voiceprint/throttle.json`. Measured best on this laptop: **85/90**. | This RTX 3070 laptop idles at 87–90 °C, and its driver cuts clocks above its 87 °C target (slowdown 98 °C, shutdown 101 °C). At 97 °C the SM clock fell to 210 MHz and blocks took 24 min. At 85/90, about 8 min per block. At 86/88, about 11 min, because it paused almost constantly. The cooling, not the setting, sets the ceiling. The Iris Xe iGPU was rejected: it shares the CPU's 35 W budget and heat, has no dedicated memory, and is not a supported PyTorch XPU target. |
 
 ## 4. Files
 
@@ -270,3 +273,12 @@ two short clauses" (100% vs 100%, not distinctive).
 - Process note: queues launched with `Start-Process`, and even via WMI, did not survive session
   restarts on this machine. Runs are now tracked background tasks, and per-block checkpoints
   (D-40) make every restart cheap.
+
+### 2026-09-26: corrected attribution and signature ablation
+
+- Tweet attribution over ten real brands: 75% per tweet and 100% per 10 (full features), down
+  from the inflated 77% that included the pooled customer speaker (D-49).
+- Signatures stripped: full features 67% and 99%; style embedding 62% → 36% per tweet. The feature
+  set measures writing, not sign-offs.
+- Runs were stopped twice by Claude Code's low-memory reaper while the session was idle. Checkpoints
+  (D-40) meant each resume lost at most a partial block.

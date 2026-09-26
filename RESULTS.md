@@ -153,4 +153,23 @@ reply), and build facts-only packs from style-only rules.
 Frontier stages (induction, merge, judging, generation) in sections 1, 4 and 5 were answered by
 Claude Opus 5.5 in a Claude Code session through the `session` provider.
 
-<!-- section 6 (signature ablation) is filled in when it completes -->
+## 6. Is it voice, or just signatures?
+
+`python scripts/public_evals.py twcs_nosig`
+
+Several brands sign every tweet with agent initials (`^TN`, `-SLM`, `*KellenF`). That is a real
+part of brand voice, but it is also an easy shortcut. The ablation strips every agent sign-off
+(brand hashtags stay) and re-runs the same attribution on the same ten brands.
+
+| 10 brands, chance 10% | with signatures: 1 tweet / 10 tweets | signatures stripped: 1 / 10 |
+|---|---|---|
+| surface features | 62% / 98% | 52% / 97% |
+| **full feature set** | **75% / 100%** | **67% / 99%** |
+| style embedding alone | 62% / 95% | 36% / 80% |
+
+Removing signatures costs the full feature set 8 points per tweet and almost nothing over ten
+tweets: the voice it measures is mostly *how brands write*, not how they sign. The general-purpose
+style embedding loses 26 points, so much of what it had picked up was the sign-off. This is the
+clearest evidence that the purpose-built feature set, not a generic style model, carries the
+result.
+
