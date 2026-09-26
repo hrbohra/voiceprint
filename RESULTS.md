@@ -53,12 +53,18 @@ TypeScript scorer sees), the **full** feature set, and the **style** embedding a
 
 | corpus | writers | chance | surface: 1 text / 10 texts | full: 1 / 10 | style embedding: 1 / 10 |
 |---|---|---|---|---|---|
-| Customer Support on Twitter (brand replies) | 10 brands | 10% | *re-running* | *re-running* | *re-running* |
+| Customer Support on Twitter (brand replies) | 10 brands | 10% | 62% / 98% | **75% / 100%** | 62% / 95% |
 | Project Gutenberg novels (narration) | 8 authors | 12.5% | 33% / 76% | **47% / 92%** | 31% / 64% |
 
 The full feature set beats the purpose-built style embedding on both corpora, and the cheap
 portable subset is close behind on tweets. A voice shows over several messages: ten texts are
 enough to identify the writer almost every time.
+
+Correction: a first run of the tweet evaluation included a pooled "customer" pseudo-speaker (all
+customers counted as one writer) among the ten. The row above is the corrected run over ten real
+brands (AmazonHelp, AppleSupport, Uber_Support, Delta, SpotifyCares, AmericanAir,
+British_Airways, comcastcares, XboxSupport, TMobileHelp). The per-tweet accuracy of the full
+feature set moved from 77% to 75%. See BUILD_LOG D-49.
 
 Caveats. Book test passages come from the same novels as training passages (disjoint blocks), not
 from unseen novels. Many brands sign replies with agent initials (`^TN`); that is part of brand

@@ -1,27 +1,26 @@
 {
   "summary": {
     "speakers": 10,
-    "test_turns": 1186,
+    "test_turns": 1214,
     "chance": 0.1,
-    "majority": 0.101,
+    "majority": 0.114,
     "surface": {
-      "per_turn": 0.642,
-      "per_10_turns": 0.948,
-      "chunks": 115
+      "per_turn": 0.622,
+      "per_10_turns": 0.983,
+      "chunks": 116
     },
     "full": {
-      "per_turn": 0.77,
+      "per_turn": 0.745,
       "per_10_turns": 1.0,
-      "chunks": 115
+      "chunks": 116
     },
     "style": {
-      "per_turn": 0.611,
-      "per_10_turns": 0.93,
-      "chunks": 115
+      "per_turn": 0.622,
+      "per_10_turns": 0.948,
+      "chunks": 116
     }
   },
   "speakers": [
-    "customer",
     "AmazonHelp",
     "AppleSupport",
     "Uber_Support",
@@ -30,6 +29,7 @@
     "AmericanAir",
     "British_Airways",
     "comcastcares",
-    "XboxSupport"
+    "XboxSupport",
+    "TMobileHelp"
   ]
 }
