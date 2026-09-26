@@ -42,7 +42,7 @@ def low_power() -> bool:
     return os.environ.get("VOICEPRINT_LOW_POWER") == "1"
 
 
-_thermal = {"checked": 0.0, "temp": None, "rest_read": 0.0, "rest": None}
+_thermal = {"checked": 0.0, "temp": None, "rest_read": 0.0, "rest": None, "hot_c": 84, "pause_c": 88}
 
 
 def _gpu_temp() -> int | None:
@@ -59,9 +59,9 @@ def _gpu_temp() -> int | None:
 def gpu_rest() -> None:
     """Pause after a GPU batch in low-power mode (D-51, D-53).
 
-    Base rest comes from `.voiceprint/throttle.json` {"rest_s": …} (re-read every 20 s, so speed can
+    Settings come from `.voiceprint/throttle.json` {"rest_s", "hot_c", "pause_c"} (re-read every 20 s, so speed can
     be tuned mid-run without losing work), else VOICEPRINT_GPU_REST_S, else 0.1 s. A thermal guard
-    reads the GPU temperature every 30 s: at >= 85 °C the rest grows to 0.5 s, and at >= 90 °C the
+    reads the GPU temperature every 15 s: at >= hot_c (84 °C) the rest grows to 0.5 s, and at >= pause_c (88 °C) the
     run pauses 20 s to cool. The run goes as fast as the temperature allows, never faster."""
     if not low_power():
         return
@@ -72,17 +72,21 @@ def gpu_rest() -> None:
     if now - _thermal["rest_read"] > 20:
         _thermal["rest_read"] = now
         try:
-            _thermal["rest"] = float(json.loads(open(".voiceprint/throttle.json", encoding="utf-8").read())["rest_s"])
+            cfg = json.loads(open(".voiceprint/throttle.json", encoding="utf-8").read())
         except Exception:  # noqa: BLE001
-            _thermal["rest"] = float(os.environ.get("VOICEPRINT_GPU_REST_S", "0.1"))
+            cfg = {}
+        _thermal["rest"] = float(cfg.get("rest_s", os.environ.get("VOICEPRINT_GPU_REST_S", "0.1")))
+        # Defaults sit just under this laptop GPU's 87 °C target, above which the driver cuts clocks.
+        _thermal["hot_c"] = int(cfg.get("hot_c", 84))
+        _thermal["pause_c"] = int(cfg.get("pause_c", 88))
     if now - _thermal["checked"] > 15:
         _thermal["checked"] = now
         _thermal["temp"] = _gpu_temp()
     rest, t = _thermal["rest"], _thermal["temp"]
-    if t is not None and t >= 90:
+    if t is not None and t >= _thermal["pause_c"]:
         time.sleep(20)
         _thermal["checked"] = 0.0  # re-check straight after cooling
-    elif t is not None and t >= 85:
+    elif t is not None and t >= _thermal["hot_c"]:
         rest = max(rest, 0.5)
     time.sleep(rest)
 
