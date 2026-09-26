@@ -64,6 +64,8 @@ def inspect(corpus: Path, fmt: Optional[str] = typer.Option(None, help="jsonl|cs
 def extract(
     corpus: Path,
     speaker: list[str] = typer.Option([], "--speaker", "-s", help="Target speaker (repeatable). Default: the most frequent."),
+    reference: list[str] = typer.Option([], "--reference", "-r", help="Reference speaker (repeatable): comparable brands the voice is contrasted with. Default: every other speaker."),
+    max_target: Optional[int] = typer.Option(None, help="Sample at most this many target turns, by whole conversation."),
     out: Path = typer.Option(Path("out"), "--out", "-o"),
     config: Optional[Path] = typer.Option(None, "--config", "-c"),
     fmt: Optional[str] = typer.Option(None, help="Force a loader."),
@@ -73,7 +75,7 @@ def extract(
     cpu: bool = typer.Option(False, help="Force CPU."),
 ) -> None:
     """Run the full extraction and write voice.json, VOICE.md, the prompt pack and training files."""
-    from . import pipeline
+    from . import models, pipeline
     from .config import Config
     from .ingest import load
     from .schema import Corpus
@@ -85,7 +87,9 @@ def extract(
     c = load(corpus, fmt)
     if max_turns:
         c = Corpus(c.turns[:max_turns], c.name)
-    res = pipeline.run(c, cfg, targets=speaker or None, use_llm=not no_llm, public=public, progress=con.print)
+    models.configure(cfg.use_gpu)  # applies VOICEPRINT_LOW_POWER before any model loads
+    res = pipeline.run(c, cfg, targets=speaker or None, reference_speakers=reference or None, max_target=max_target,
+                       use_llm=not no_llm, public=public, progress=con.print)
     pipeline.write(res, out)
     kept = [r for r in res.data["rules"] if r["kept"]]
     con.print(f"\n[bold green]done[/bold green]: {len(kept)} verified rules → {out / 'VOICE.md'}")
