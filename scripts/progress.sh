@@ -23,8 +23,10 @@ run_pct() {  # percent of one run, from its log plus the newest checkpoint dir
 }
 
 bar() {  # bar <label> <pct>
-  local w=40 f=$(( $2 * 40 / 100 ))
-  printf "  %-26s [%s%s] %3d%%\n" "$1" "$(printf '#%.0s' $(seq 1 $f) 2>/dev/null)" "$(printf '.%.0s' $(seq 1 $((w - f))) 2>/dev/null)" "$2"
+  local w=40 f=$(( $2 * 40 / 100 )) full="" empty="" i
+  for ((i = 0; i < f; i++)); do full+="#"; done
+  for ((i = f; i < w; i++)); do empty+="."; done
+  printf "  %-26s [%s%s] %3d%%\n" "$1" "$full" "$empty" "$2"
 }
 
 while true; do
