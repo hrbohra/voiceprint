@@ -42,19 +42,56 @@ def low_power() -> bool:
     return os.environ.get("VOICEPRINT_LOW_POWER") == "1"
 
 
-def gpu_rest() -> None:
-    """Pause after a GPU batch in low-power mode, leaving the GPU idle part of the time."""
-    if low_power():
-        import time
+_thermal = {"checked": 0.0, "temp": None, "rest_read": 0.0, "rest": None}
 
-        time.sleep(float(os.environ.get("VOICEPRINT_GPU_REST_S", "0.6")))
+
+def _gpu_temp() -> int | None:
+    import subprocess
+
+    try:
+        out = subprocess.run(["nvidia-smi", "--query-gpu=temperature.gpu", "--format=csv,noheader"],
+                             capture_output=True, text=True, timeout=5).stdout.strip()
+        return int(out.splitlines()[0])
+    except Exception:  # noqa: BLE001 - no nvidia-smi: no thermal guard, base rest only
+        return None
+
+
+def gpu_rest() -> None:
+    """Pause after a GPU batch in low-power mode (D-51, D-53).
+
+    Base rest comes from `.voiceprint/throttle.json` {"rest_s": …} (re-read every 20 s, so speed can
+    be tuned mid-run without losing work), else VOICEPRINT_GPU_REST_S, else 0.1 s. A thermal guard
+    reads the GPU temperature every 30 s: at >= 85 °C the rest grows to 0.5 s, and at >= 90 °C the
+    run pauses 20 s to cool. The run goes as fast as the temperature allows, never faster."""
+    if not low_power():
+        return
+    import json
+    import time
+
+    now = time.monotonic()
+    if now - _thermal["rest_read"] > 20:
+        _thermal["rest_read"] = now
+        try:
+            _thermal["rest"] = float(json.loads(open(".voiceprint/throttle.json", encoding="utf-8").read())["rest_s"])
+        except Exception:  # noqa: BLE001
+            _thermal["rest"] = float(os.environ.get("VOICEPRINT_GPU_REST_S", "0.1"))
+    if now - _thermal["checked"] > 15:
+        _thermal["checked"] = now
+        _thermal["temp"] = _gpu_temp()
+    rest, t = _thermal["rest"], _thermal["temp"]
+    if t is not None and t >= 90:
+        time.sleep(20)
+        _thermal["checked"] = 0.0  # re-check straight after cooling
+    elif t is not None and t >= 85:
+        rest = max(rest, 0.5)
+    time.sleep(rest)
 
 
 def configure(use_gpu: bool = True) -> None:
     _state["use_gpu"] = use_gpu
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
     if low_power():
-        threads = int(os.environ.get("VOICEPRINT_THREADS", "2"))
+        threads = int(os.environ.get("VOICEPRINT_THREADS", "4"))
         for var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
             os.environ[var] = str(threads)
         try:
@@ -133,7 +170,7 @@ def encoder(key: str):
 
 def batch_size(default_gpu: int = 64, default_cpu: int = 16) -> int:
     if low_power():
-        return 16 if device() == "cuda" else 8
+        return 32 if device() == "cuda" else 8
     return default_gpu if device() == "cuda" else default_cpu
 
 
